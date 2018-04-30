@@ -52,5 +52,35 @@ namespace recupMetaDonnees
             }
             return fC;
         }
+
+        //Pour convertir la collection il faut mettre null dans les autres paramètres 
+        public static List<string> convertToString(ListCollection listColl = null, ContentTypeCollection contentTypeColl = null, FieldCollection fieldColl = null)
+        {
+            List<string> listARetourner = new List<string>();
+
+            if (listColl!=null)
+            {
+                foreach(List list in listColl)
+                {
+                    listARetourner.Add(list.Title);
+                }
+            }
+            else if (contentTypeColl != null)
+            {
+                foreach (ContentType contentType in contentTypeColl)
+                {
+                    listARetourner.Add(contentType.Name);
+                }
+            }
+            else if (fieldColl != null)
+            {
+                foreach (Field field in fieldColl)
+                {
+                    listARetourner.Add(field.Title);
+                }
+            }
+
+            return listARetourner;
+        }
     }
 }
