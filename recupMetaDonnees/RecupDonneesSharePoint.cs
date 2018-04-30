@@ -11,9 +11,10 @@ namespace recupMetaDonnees
     {
         public static ContentTypeCollection recupContentTypeDuneList(ClientContext clientContext, string nomListe)
         {
-            //// Get the content type collection for the list "Custom"
+            //// Get the content type collection for the list nomListe
             ContentTypeCollection contentTypeColl = clientContext.Web.Lists.GetByTitle(nomListe).ContentTypes;
 
+            //Execute the reques
             clientContext.Load(contentTypeColl);
             clientContext.ExecuteQuery();
 
@@ -22,15 +23,18 @@ namespace recupMetaDonnees
 
         public static FieldCollection recupChampDunContentType(ClientContext clientContext, ContentTypeCollection contentTypeColl, string nomContentType)
         {
+            //Initialisaton des variable necessaires 
             FieldCollection fC=null;
-            //// Get the content type collection for the list "Custom"
+            //// Get the field  collection for the content type nomContentType contenu dans la collection contentTypeCollection
             foreach (ContentType ct in contentTypeColl)
             {
                 if(ct.Name==nomContentType)
                 {
-                fC = ct.Fields;
-                clientContext.Load(fC);
-                clientContext.ExecuteQuery();
+                    //Recupération des champs 
+                    fC = ct.Fields;
+                    //Execution de la requette
+                    clientContext.Load(fC);
+                    clientContext.ExecuteQuery();
                 }
 
             }
