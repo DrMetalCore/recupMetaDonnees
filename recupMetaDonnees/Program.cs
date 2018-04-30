@@ -19,22 +19,27 @@ namespace recupMetaDonnees
 
             //// Get the context for the SharePoint Site to access the data
             ClientContext clientContext = new ClientContext(URL);
-
-            //// Get the content type collection for the list "Custom"
+            /*
+            // Get the content type collection for the list "Custom"
             //ContentTypeCollection contentTypeColl = clientContext.Web.Lists.GetByTitle(nomListe).ContentTypes;
-            ContentTypeCollection contentTypeColl = RecupDonneesSharePoint.recupContentTypeDuneList(clientContext, nomListe);
+            ContentTypeCollection contentTypeColl = RecupDonneesSharePoint.getContentTypesDuneList(clientContext, nomListe);
 
             clientContext.Load(contentTypeColl);
             clientContext.ExecuteQuery();
 
-            FieldCollection fC = RecupDonneesSharePoint.recupChampDunContentType(clientContext, contentTypeColl, nomContentType);
+            FieldCollection fC = RecupDonneesSharePoint.getChampsDunContentType(clientContext, contentTypeColl, nomContentType);
             //// Display the Content Type name
             
             foreach (Field f in fC)
             {
                 Console.WriteLine(f.Title);
             }
-            
+            */
+            ListCollection lC = RecupDonneesSharePoint.getAllListes(clientContext);
+            foreach (List l in  lC)
+            {
+                Console.WriteLine(l.Title);
+            }
             Console.ReadLine();
         }
     }

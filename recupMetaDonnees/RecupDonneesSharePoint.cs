@@ -9,7 +9,19 @@ namespace recupMetaDonnees
 {
     class RecupDonneesSharePoint
     {
-        public static ContentTypeCollection recupContentTypeDuneList(ClientContext clientContext, string nomListe)
+        public static ListCollection getAllListes(ClientContext clientContext)
+        {
+            //Get the all list collection 
+            ListCollection listColl = clientContext.Web.Lists;
+
+            // Execute query. 
+            clientContext.Load(listColl, lists => lists.Include(testList => testList.Title));
+            clientContext.ExecuteQuery();
+
+            return listColl;
+        }
+
+        public static ContentTypeCollection getContentTypesDuneList(ClientContext clientContext, string nomListe)
         {
             //// Get the content type collection for the list nomListe
             ContentTypeCollection contentTypeColl = clientContext.Web.Lists.GetByTitle(nomListe).ContentTypes;
@@ -21,7 +33,7 @@ namespace recupMetaDonnees
             return contentTypeColl;
         }
 
-        public static FieldCollection recupChampDunContentType(ClientContext clientContext, ContentTypeCollection contentTypeColl, string nomContentType)
+        public static FieldCollection getChampsDunContentType(ClientContext clientContext, ContentTypeCollection contentTypeColl, string nomContentType)
         {
             //Initialisaton des variable necessaires 
             FieldCollection fC=null;
