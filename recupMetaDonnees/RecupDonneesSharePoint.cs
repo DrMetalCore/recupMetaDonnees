@@ -82,5 +82,36 @@ namespace recupMetaDonnees
 
             return listARetourner;
         }
+
+        public static void setCollValue(ClientContext clientContext, ListItem item, string nomColl, object valeur)
+        {
+
+            item[nomColl] = valeur;
+            item.Update(); // important, rembeber changes
+
+            clientContext.ExecuteQuery();
+        }
+
+        public static ListItem uploadFile(ClientContext clientContext, string filePath, string nomDossier)
+        {
+            // Add the ListItem
+            Folder folder = clientContext.Web.GetFolderByServerRelativeUrl(clientContext.Url + nomDossier);
+            FileCreationInformation fci = new FileCreationInformation();
+            fci.Content = System.IO.File.ReadAllBytes("../../" + filePath);
+            fci.Url = filePath;
+            fci.Overwrite = true;
+                    
+            File fileToUpload = folder.Files.Add(fci);
+            clientContext.Load(fileToUpload);
+
+            ListItem item = fileToUpload.ListItemAllFields;
+            clientContext.Load(item);
+
+            // Now invoke the server, just one time
+            clientContext.ExecuteQuery();
+
+            return item;
+            
+        }
     }
 }
