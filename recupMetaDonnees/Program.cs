@@ -1,6 +1,5 @@
 ﻿using Microsoft.SharePoint.Client;
 using System;
-using recupMetaDonnees;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,10 +20,17 @@ namespace recupMetaDonnees
             
             //// Get the context for the SharePoint Site to access the data
             ClientContext clientContext = new ClientContext(URL);
-            ListItem item = RecupDonneesSharePoint.uploadFile(clientContext, titreFichier, nomListe);
+            ListCollection lC = RecupDonneesSharePoint.getAllListes(clientContext);
+            foreach(List l in lC)
+            {
+                Console.WriteLine(l.Title);
+            }
+            ContentTypeCollection cC = RecupDonneesSharePoint.getContentTypesDuneList(clientContext, nomListe);
+            ContentType contentType = RecupDonneesSharePoint.StringToContentType(nomContentType, cC);
+            ListItem item = RecupDonneesSharePoint.uploadFile(clientContext, titreFichier, nomListe, contentType);
             RecupDonneesSharePoint.setCollValue(clientContext, item, "Cout2", 999);
 
-
+            Console.ReadLine();
 
         }
     }

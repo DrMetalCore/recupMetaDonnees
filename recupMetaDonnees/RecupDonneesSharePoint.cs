@@ -92,7 +92,7 @@ namespace recupMetaDonnees
             clientContext.ExecuteQuery();
         }
 
-        public static ListItem uploadFile(ClientContext clientContext, string filePath, string nomDossier)
+        public static ListItem uploadFile(ClientContext clientContext, string filePath, string nomDossier, ContentType contentType)
         {
             // Add the ListItem
             Folder folder = clientContext.Web.GetFolderByServerRelativeUrl(clientContext.Url + nomDossier);
@@ -107,11 +107,23 @@ namespace recupMetaDonnees
             ListItem item = fileToUpload.ListItemAllFields;
             clientContext.Load(item);
 
+            setCollValue(clientContext, item, "ContentTypeId", contentType.Id);
+
             // Now invoke the server, just one time
             clientContext.ExecuteQuery();
 
             return item;
             
+        }
+
+        public static ContentType StringToContentType(string contentString, ContentTypeCollection contentTypesColl)
+        {
+            ContentType contentTypeARetourner = null;
+            foreach (ContentType contentType in contentTypesColl)
+            {
+                if (contentType.Name == contentString) contentTypeARetourner = contentType;
+            }
+            return contentTypeARetourner;
         }
     }
 }
