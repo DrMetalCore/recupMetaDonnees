@@ -125,5 +125,29 @@ namespace recupMetaDonnees
             }
             return contentTypeARetourner;
         }
+
+        public static List<string> GetAllSubWebs(ClientContext clientContext)
+        {
+            List<string> listARetourner = new List<string>();
+            // Get the SharePoint web  
+            Web web = clientContext.Web;
+            clientContext.Load(web, website => website.Webs, website => website.Title);
+            
+            // Execute the query to the server  
+            clientContext.ExecuteQuery();
+            string[] split = clientContext.Url.Split('/');
+            string domain = split[0] + "//" + split[2];
+
+            // Loop through all the webs  
+            foreach (Web subWeb in web.Webs)
+            {
+                string newpath = domain + subWeb.ServerRelativeUrl;
+                listARetourner.Add(subWeb.Title);
+                clientContext = new ClientContext(newpath);
+                listARetourner = listARetourner.Concat(GetAllSubWebs(clientContext)).ToList();
+            }
+            return listARetourner;
+
+        }
     }
 }
