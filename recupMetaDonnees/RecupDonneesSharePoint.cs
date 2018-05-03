@@ -9,16 +9,27 @@ namespace recupMetaDonnees
 {
     class RecupDonneesSharePoint
     {
-        public static ListCollection getAllListes(ClientContext clientContext)
+        public static List<List> getAllListes(ClientContext clientContext)
         {
             //Get the all list collection 
             ListCollection listColl = clientContext.Web.Lists;
-
+            List<List> listCollARetourner = new List<List>();
             // Execute query. 
-            clientContext.Load(listColl, lists => lists.Include(testList => testList.Title));
+            clientContext.Load(listColl, lists => lists.Include(testList => testList.Title,
+                                                                testList => testList.BaseTemplate));
             clientContext.ExecuteQuery();
 
-            return listColl;
+            foreach(List list in listColl)
+            {
+                if (list.BaseTemplate == 101 ) // id dossier
+                {
+                    listCollARetourner.Add(list);
+
+                }
+                
+            }
+
+           return listCollARetourner;
         }
 
         public static ContentTypeCollection getContentTypesDuneList(ClientContext clientContext, string nomListe)
@@ -58,9 +69,9 @@ namespace recupMetaDonnees
         {
             List<string> listARetourner = new List<string>();
             
-            if (collection.GetType().ToString()== "Microsoft.SharePoint.Client.ListCollection")
+            if (collection.GetType().ToString()== "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.List]")
             {
-                ListCollection collectionConverti = (ListCollection)collection;
+                List<List> collectionConverti = (List<List>)collection;
                 foreach (List list in collectionConverti)
                 {
                     listARetourner.Add(list.Title);
