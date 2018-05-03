@@ -52,44 +52,48 @@ namespace recupMetaDonnees
             }
             return fC;
         }
-
+        
         //Pour convertir la collection il faut mettre null dans les autres paramètres 
-        public static List<string> convertToString(ListCollection listColl = null, ContentTypeCollection contentTypeColl = null, FieldCollection fieldColl = null, List<Web> webList = null)
+        public static List<string> convertToString(object collection)
         {
             List<string> listARetourner = new List<string>();
-
-            if (listColl!=null)
+            
+            if (collection.GetType().ToString()== "Microsoft.SharePoint.Client.ListCollection")
             {
-                foreach(List list in listColl)
+                ListCollection collectionConverti = (ListCollection)collection;
+                foreach (List list in collectionConverti)
                 {
                     listARetourner.Add(list.Title);
                 }
             }
-            else if (contentTypeColl != null)
+            else if (collection.GetType().ToString() == "Microsoft.SharePoint.Client.ContentTypeCollection")
             {
-                foreach (ContentType contentType in contentTypeColl)
+                ContentTypeCollection collectionConverti = (ContentTypeCollection)collection;
+                foreach (ContentType contentType in collectionConverti)
                 {
                     listARetourner.Add(contentType.Name);
                 }
             }
-            else if (fieldColl != null)
+            else if (collection.GetType().ToString() == "Microsoft.SharePoint.Client.FieldCollection")
             {
-                foreach (Field field in fieldColl)
+                FieldCollection collectionConverti = (FieldCollection)collection;
+                foreach (Field field in collectionConverti)
                 {
                     listARetourner.Add(field.Title);
                 }
             }
-            else if (webList!=null)
+            else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")
             {
-                foreach(Web w in webList)
+                List<Web> collectionConverti = (List<Web>)collection;
+                foreach (Web w in collectionConverti)
                 {
                     listARetourner.Add(w.Title);
                 }
             }
-
+            
             return listARetourner;
         }
-
+        
         public static void setCollValue(ClientContext clientContext, ListItem item, string nomColl, object valeur)
         {
 
@@ -152,11 +156,10 @@ namespace recupMetaDonnees
                 string newpath = domain + subWeb.ServerRelativeUrl;
                 listARetourner.Add(subWeb);
                 clientContext = new ClientContext(newpath);
-
                 listARetourner = listARetourner.Concat(GetAllSubWebs(clientContext)).ToList();
             }
             return listARetourner;
-
+            
         }
     }
 }
