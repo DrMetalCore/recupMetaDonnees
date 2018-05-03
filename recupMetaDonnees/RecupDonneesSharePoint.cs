@@ -54,7 +54,7 @@ namespace recupMetaDonnees
         }
 
         //Pour convertir la collection il faut mettre null dans les autres paramètres 
-        public static List<string> convertToString(ListCollection listColl = null, ContentTypeCollection contentTypeColl = null, FieldCollection fieldColl = null)
+        public static List<string> convertToString(ListCollection listColl = null, ContentTypeCollection contentTypeColl = null, FieldCollection fieldColl = null, List<Web> webList = null)
         {
             List<string> listARetourner = new List<string>();
 
@@ -77,6 +77,13 @@ namespace recupMetaDonnees
                 foreach (Field field in fieldColl)
                 {
                     listARetourner.Add(field.Title);
+                }
+            }
+            else if (webList!=null)
+            {
+                foreach(Web w in webList)
+                {
+                    listARetourner.Add(w.Title);
                 }
             }
 
@@ -126,9 +133,10 @@ namespace recupMetaDonnees
             return contentTypeARetourner;
         }
 
-        public static List<string> GetAllSubWebs(ClientContext clientContext)
+        public static List<Web> GetAllSubWebs(ClientContext clientContext)
         {
-            List<string> listARetourner = new List<string>();
+            List<Web> listARetourner = new List<Web>();
+            
             // Get the SharePoint web  
             Web web = clientContext.Web;
             clientContext.Load(web, website => website.Webs, website => website.Title);
@@ -142,8 +150,9 @@ namespace recupMetaDonnees
             foreach (Web subWeb in web.Webs)
             {
                 string newpath = domain + subWeb.ServerRelativeUrl;
-                listARetourner.Add(subWeb.Title);
+                listARetourner.Add(subWeb);
                 clientContext = new ClientContext(newpath);
+
                 listARetourner = listARetourner.Concat(GetAllSubWebs(clientContext)).ToList();
             }
             return listARetourner;

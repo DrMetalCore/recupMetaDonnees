@@ -20,7 +20,7 @@ namespace recupMetaDonnees
             //Console.WriteLine("Enter your password.");
             //SecureString password = GetPassword();
             ClientContext clientContext = new ClientContext(URL);
-            List<string> list = RecupDonneesSharePoint.GetAllSubWebs(clientContext);
+            List<string> list =RecupDonneesSharePoint.convertToString(null, null,null, RecupDonneesSharePoint.GetAllSubWebs(clientContext));
             list.ForEach(Console.WriteLine);
             Console.ReadLine();
 
