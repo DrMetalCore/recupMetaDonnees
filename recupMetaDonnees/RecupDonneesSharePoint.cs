@@ -137,6 +137,16 @@ namespace recupMetaDonnees
             return contentTypeARetourner;
         }
 
+        public static Web StringToWeb(string contentString, List<Web> webColl)
+        {
+            Web webARetourner = null;
+            foreach (Web web in webColl)
+            {
+                if (web.Title == contentString) webARetourner = web;
+            }
+            return webARetourner;
+        }
+
         public static List<Web> GetAllSubWebs(ClientContext clientContext)
         {
             List<Web> listARetourner = new List<Web>();
