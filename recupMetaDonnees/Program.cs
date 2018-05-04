@@ -16,20 +16,28 @@ namespace recupMetaDonnees
             string URL = "http://loca-mle-w16:81/sites/testBot";
             string nomListe = "Facture";
             string nomContentType = "Facture";
-            string titreFichier = "jeTest.txt";
-            //Console.WriteLine("Enter your password.");
-            //SecureString password = GetPassword();
-            ClientContext clientContext = new ClientContext(URL);
-            List<List> collect = RecupDonneesSharePoint.getAllListes(clientContext);
-            List<string> list =RecupDonneesSharePoint.convertToString(collect);
-            list.ForEach(Console.WriteLine);
-            
+            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
-            
-            //list.ForEach(Console.WriteLine);
+            InstanceBot i = new InstanceBot(URL, titreFichier);
+
+            i.GetAllSubWebs();
+            i.getFoldersSite("Compta");
+            i.getFolderContentTypes(nomListe);
+            i.getChampsDunContentType(nomContentType);
+
+            InstanceBot.convertToString(i.listDesSites).ForEach(Console.WriteLine);
+            Console.WriteLine("-----------------------");
+            InstanceBot.convertToString(i.listDesDossier).ForEach(Console.WriteLine);
+            Console.WriteLine("-----------------------");
+            InstanceBot.convertToString(i.contentTypeColl).ForEach(Console.WriteLine);
+            Console.WriteLine("-----------------------");
+            InstanceBot.convertToString(i.fieldColl).ForEach(Console.WriteLine);
+
+            i.setContentTypeWithString(nomContentType);
+            i.uploadFile();
+            //i.nomChamp = "Cout2";
+            //i.setCollValue(666);
             Console.ReadLine();
-
-
         }
     }
 }
