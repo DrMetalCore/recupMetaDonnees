@@ -20,7 +20,7 @@ namespace recupMetaDonnees
 
             InstanceBot i = new InstanceBot(URL, titreFichier);
 
-            i.GetAllSubWebs();
+            i.getAllSubWebs();
             i.getFoldersSite("Compta");
             i.getFolderContentTypes(nomListe);
             i.getChampsDunContentType(nomContentType);
@@ -35,8 +35,8 @@ namespace recupMetaDonnees
 
             i.setContentTypeWithString(nomContentType);
             i.uploadFile();
-            //i.nomChamp = "Cout2";
-            //i.setCollValue(666);
+            i.setCollValue("Cout2", 955);
+
             Console.ReadLine();
         }
     }

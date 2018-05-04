@@ -9,21 +9,20 @@ namespace recupMetaDonnees
 {
     class InstanceBot
     {
-        string domaine { get; }
-        string URL { get; set; }
-        string filePath { get; set; }
+        private string domaine { get; set; }
+        private string filePath { get; set; }
         public string nomDossier { get; set; }
         public string nomChamp { get; set; }
-        object valeurChamp { get; set; }
+        public object valeurChamp { get; set; }
 
-        Web site { get; set; }
-        ContentType typeDuFichier { get; set; }
-        ClientContext clientContext { get; set; }
-        ListItem fichier { get; set; }
+        private Web site { get; set; }
+        private ContentType typeDuFichier { get; set; }
+        private ClientContext clientContext { get; set; }
+        private ListItem fichier { get; set; }
 
 
-        public List<Web> listDesSites { get; set; }
-        public List<List> listDesDossier { get; set; }
+        public List<Web> listDesSites { get; }
+        public List<List> listDesDossier { get;}
         public ContentTypeCollection contentTypeColl { get; set; }
         public FieldCollection fieldColl { get; set; }
 
@@ -36,8 +35,7 @@ namespace recupMetaDonnees
 
         public InstanceBot(string url, string chemin)
         {
-            URL = url;
-            clientContext = new ClientContext(URL);
+            clientContext = new ClientContext(url);
             filePath = chemin;
             string[] split = clientContext.Url.Split('/');
             domaine = split[0] + "//" + split[2];
@@ -46,7 +44,7 @@ namespace recupMetaDonnees
             listDesDossier = new List<List>();
 
         }
-        public void GetAllSubWebs()
+        public void getAllSubWebs()
         {
             
             // Get the SharePoint web  
@@ -72,9 +70,7 @@ namespace recupMetaDonnees
         {
             //Met a jour le site choisis
             setWebWithString(nomSite);
-            //Met ajour le client context et l'URL
-            URL = URL + "/" + nomSite + "/"; 
-            clientContext = new ClientContext(URL);
+
             //Get the all list collection 
             ListCollection listColl = clientContext.Web.Lists;
             
@@ -168,15 +164,16 @@ namespace recupMetaDonnees
             
             return listARetourner;
         }
-        
-        public void setCollValue(object valeur)
-        { 
 
+        public void setCollValue(string nomColl,  object valeur)
+        {
+            nomChamp = nomColl;
             valeurChamp = valeur;
             fichier[nomChamp] = valeurChamp;
             fichier.Update(); // important, rembeber changes
 
-            //clientContext.ExecuteQuery();
+            clientContext.ExecuteQuery();
+
         }
 
         public void uploadFile()
@@ -186,7 +183,8 @@ namespace recupMetaDonnees
             Folder folder = clientContext.Web.GetFolderByServerRelativeUrl(clientContext.Url + nomDossier);
             FileCreationInformation fci = new FileCreationInformation();
             fci.Content = System.IO.File.ReadAllBytes(filePath);
-            fci.Url = filePath;
+            string[] cut = filePath.Split('/');
+            fci.Url = cut.Last();
             fci.Overwrite = true;
                     
             File fileToUpload = folder.Files.Add(fci);
@@ -194,9 +192,9 @@ namespace recupMetaDonnees
 
             fichier = fileToUpload.ListItemAllFields;
             clientContext.Load(fichier);
-            nomChamp = "ContentTypeId";
-            setCollValue(typeDuFichier.Id);
-
+            setCollValue("ContentTypeId",typeDuFichier.Id);
+            string[] titre = cut.Last().Split('.');
+            setCollValue("Title",titre.First());
             // Now invoke the server, just one time
 
             clientContext.ExecuteQuery();
