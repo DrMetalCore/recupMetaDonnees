@@ -9,122 +9,122 @@ namespace recupMetaDonnees
 {
     public class InstanceBot
     {
-        private string domaine { get; set; }
-        private string filePath { get; set; }
-        public string nomDossier { get; set; }
-        public string nomChamp { get; set; }
-        public object valeurChamp { get; set; }
+        private string Domaine { get; set; }
+        private string FilePath { get; set; }
+        public string NomDossier { get; set; }
+        public string NomChamp { get; set; }
+        public object ValeurChamp { get; set; }
 
-        private Web site { get; set; }
-        private ContentType typeDuFichier { get; set; }
-        private ClientContext clientContext { get; set; }
-        private ListItem fichier { get; set; }
+        private Web Site { get; set; }
+        private ContentType TypeDuFichier { get; set; }
+        private ClientContext ClientCtx { get; set; }
+        private ListItem Fichier { get; set; }
 
 
-        public List<Web> listDesSites { get; set; }
-        public List<List> listDesDossier { get; set; }
-        public List<ContentType> listDesContentType { get; set; }
-        public List<Field> listDesField { get; set; }
+        public List<Web> ListDesSites { get; set; }
+        public List<List> ListDesDossier { get; set; }
+        public List<ContentType> ListDesContentType { get; set; }
+        public List<Field> ListDesField { get; set; }
 
         /* Peux être inutile
-        public List<string> listDesSitesString { get; set; }
-        List<string> listDesDossierString;
+        public List<string> ListDesSitesString { get; set; }
+        List<string> ListDesDossierString;
         List<string> contentTypeCollString;
         List<string> fieldCollString;
         */
 
         public InstanceBot(string url, string chemin)
         {
-            clientContext = new ClientContext(url);
-            filePath = chemin;
-            string[] split = clientContext.Url.Split('/');
-            domaine = split[0] + "//" + split[2];
+            ClientCtx = new ClientContext(url);
+            FilePath = chemin;
+            string[] split = ClientCtx.Url.Split('/');
+            Domaine = split[0] + "//" + split[2];
 
-            listDesSites = new List<Web>();
-            listDesDossier = new List<List>();
-            listDesContentType = new List<ContentType>();
-            listDesField = new List<Field>();
+            ListDesSites = new List<Web>();
+            ListDesDossier = new List<List>();
+            ListDesContentType = new List<ContentType>();
+            ListDesField = new List<Field>();
 
-            getAllSubWebs();
+            GetAllSubWebs();
 
         }
-        public void getAllSubWebs()
+        public void GetAllSubWebs()
         {
             // Get the SharePoint web  
-            Web web = clientContext.Web;
-            clientContext.Load(web, website => website.Webs, website => website.Title);
+            Web web = ClientCtx.Web;
+            ClientCtx.Load(web, website => website.Webs, website => website.Title);
 
             // Execute the query to the server  
-            clientContext.ExecuteQuery();
+            ClientCtx.ExecuteQuery();
 
             // Loop through all the webs  
             foreach (Web subWeb in web.Webs)
             {
-                string newpath = domaine + subWeb.ServerRelativeUrl;
-                listDesSites.Add(subWeb);
-                clientContext = new ClientContext(newpath);
-                if (subWeb.Webs != null) getAllSubWebs();
+                string newpath = Domaine + subWeb.ServerRelativeUrl;
+                ListDesSites.Add(subWeb);
+                ClientCtx = new ClientContext(newpath);
+                if (subWeb.Webs != null) GetAllSubWebs();
             }
         }
 
-        public void getFoldersSite(string nomSite)
+        public void GetFoldersSite(string nomSite)
         {
             //Met a jour le site choisis
-            setWebWithString(nomSite);
+            SetWebWithString(nomSite);
 
             //Get the all list collection 
-            ListCollection listColl = clientContext.Web.Lists;
+            ListCollection listColl = ClientCtx.Web.Lists;
 
             // Execute query. 
-            clientContext.Load(listColl, lists => lists.Include(testList => testList.Title,
+            ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
                                                                 testList => testList.BaseTemplate));
-            clientContext.ExecuteQuery();
+            ClientCtx.ExecuteQuery();
 
             foreach (List list in listColl)
             {
                 if (list.BaseTemplate == 101) // id dossier
                 {
-                    listDesDossier.Add(list);
+                    ListDesDossier.Add(list);
                 }
 
             }
 
         }
 
-        public void getFolderContentTypes(string nomListe)
+        public void GetFolderContentTypes(string nomListe)
         {
 
-
             // Get the content type collection for the list nomListe
-            nomDossier = nomListe;
-            ContentTypeCollection contentTypeColl = clientContext.Web.Lists.GetByTitle(nomDossier).ContentTypes;
+
+            NomDossier = nomListe;
+            ContentTypeCollection contentTypeColl = ClientCtx.Web.Lists.GetByTitle(NomDossier).ContentTypes;
             //Execute the reques
-            clientContext.Load(contentTypeColl);
-            clientContext.ExecuteQuery();
+            ClientCtx.Load(contentTypeColl);
+            ClientCtx.ExecuteQuery();
 
             foreach (ContentType c in contentTypeColl)
             {
-                listDesContentType.Add(c);
+                ListDesContentType.Add(c);
             }
         }
 
-        public void getChampsDunContentType(string nomContentType)
+        public void GetChampsDunContentType(string nomContentType)
         {
-            nomChamp = nomContentType;
+            SetContentTypeWithString(nomContentType);
             //// Get the field  collection for the content type nomContentType contenu dans la collection contentTypeCollection
-            foreach (ContentType ct in listDesContentType)
+            foreach (ContentType ct in ListDesContentType)
             {
-                if (ct.Name == nomChamp)
+                if (ct.Name == NomChamp)
                 {
                     //Recupération des champs 
                     FieldCollection fieldColl = ct.Fields;
                     //Execution de la requette
-                    clientContext.Load(fieldColl);
-                    clientContext.ExecuteQuery();
+                    ClientCtx.Load(fieldColl);
+                    ClientCtx.ExecuteQuery();
 
                     foreach (Field f in fieldColl)
                     {
-                        if (f.FromBaseType == false) listDesField.Add(f);
+                        if (f.FromBaseType == false) ListDesField.Add(f);
                     }
                 }
 
@@ -134,73 +134,73 @@ namespace recupMetaDonnees
 
         //Pour convertir la collection il faut mettre null dans les autres paramètres 
 
-        public void setCollValue(string nomColl, object valeur)
+        public void SetCollValue(string nomColl, object valeur)
         {
-            nomChamp = nomColl;
-            valeurChamp = valeur;
-            fichier[nomChamp] = valeurChamp;
-            fichier.Update(); // important, rembeber changes
+            NomChamp = nomColl;
+            ValeurChamp = valeur;
+            Fichier[NomChamp] = ValeurChamp;
+            Fichier.Update(); // important, rembeber changes
 
-            clientContext.ExecuteQuery();
+            ClientCtx.ExecuteQuery();
 
         }
 
-        public void uploadFile()
+        public void ToUploadFile()
         {
 
             // Add the ListItem
-            Folder folder = clientContext.Web.GetFolderByServerRelativeUrl(clientContext.Url + nomDossier);
+            if (NomDossier == "Documents") NomDossier = "Shared Documents";
+            Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
             FileCreationInformation fci = new FileCreationInformation();
-            fci.Content = System.IO.File.ReadAllBytes(filePath);
-            string[] cut = filePath.Split('/');
+            fci.Content = System.IO.File.ReadAllBytes(FilePath);
+            string[] cut = FilePath.Split('/');
             fci.Url = cut.Last();
             fci.Overwrite = true;
 
             File fileToUpload = folder.Files.Add(fci);
-            clientContext.Load(fileToUpload);
+            ClientCtx.Load(fileToUpload);
 
-            fichier = fileToUpload.ListItemAllFields;
-            clientContext.Load(fichier);
-            setCollValue("ContentTypeId", typeDuFichier.Id);
+            Fichier = fileToUpload.ListItemAllFields;
+            ClientCtx.Load(Fichier);
+            SetCollValue("ContentTypeId", TypeDuFichier.Id);
             string[] titre = cut.Last().Split('.');
-            setCollValue("Title", titre.First());
+            SetCollValue("Title", titre.First());
             // Now invoke the server, just one time
 
-            clientContext.ExecuteQuery();
-
+            ClientCtx.ExecuteQuery();
         }
 
-        public void setContentTypeWithString(string contentString)
+        public void SetContentTypeWithString(string contentString)
         {
-            foreach (ContentType contentType in listDesContentType)
+            foreach (ContentType contentType in ListDesContentType)
             {
-                if (contentType.Name == contentString) typeDuFichier = contentType;
+                if (contentType.Name == contentString) TypeDuFichier = contentType;
             }
 
         }
 
-        public void setWebWithString(string contentString, List<Web> webColl)
+        public void SetWebWithString(string contentString, List<Web> webColl)
         {
             foreach (Web web in webColl)
             {
-                if (web.Title == contentString) site = web;
+                if (web.Title == contentString) Site = web;
             }
 
         }
 
 
-        public void setWebWithString(string webString)
+        public void SetWebWithString(string webString)
         {
-            foreach (Web web in listDesSites)
+            foreach (Web web in ListDesSites)
             {
-                if (web.Title == webString) site = web;
+                if (web.Title == webString) Site = web;
             }
 
             //Update the client context with the selected site
-            clientContext = new ClientContext(domaine + site.ServerRelativeUrl);
+            ClientCtx = new ClientContext(Domaine + Site.ServerRelativeUrl);
 
         }
-        public static List<string> convertToString(object collection)
+        public static List<string> ConvertToString(object collection)
         {
             List<string> listARetourner = new List<string>();
             if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.List]")
