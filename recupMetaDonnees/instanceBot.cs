@@ -124,7 +124,7 @@ namespace recupMetaDonnees
 
                     foreach (Field f in fieldColl)
                     {
-                        listDesField.Add(f);
+                        if (f.FromBaseType == false) listDesField.Add(f);
                     }
                 }
 
