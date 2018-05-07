@@ -114,7 +114,7 @@ namespace recupMetaDonnees
             //// Get the field  collection for the content type nomContentType contenu dans la collection contentTypeCollection
             foreach (ContentType ct in ListDesContentType)
             {
-                if (ct.Name == NomChamp)
+                if (ct == TypeDuFichier)
                 {
                     //Recupération des champs 
                     FieldCollection fieldColl = ct.Fields;
@@ -124,7 +124,7 @@ namespace recupMetaDonnees
 
                     foreach (Field f in fieldColl)
                     {
-                        if (f.FromBaseType == false) ListDesField.Add(f);
+                        ListDesField.Add(f);
                     }
                 }
 
@@ -136,11 +136,17 @@ namespace recupMetaDonnees
 
         public void SetCollValue(string nomColl, object valeur)
         {
+
             NomChamp = nomColl;
             ValeurChamp = valeur;
-            Fichier[NomChamp] = ValeurChamp;
-            Fichier.Update(); // important, rembeber changes
 
+            Field f = ListDesField.Find(field => field.Title == nomColl);
+            if (f.TypeAsString == "Boolean") Fichier[NomChamp] = Convert.ToBoolean(valeur);
+            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency") Fichier[NomChamp] = Convert.ToInt32(valeur);
+            else if (f.TypeAsString == "Text" ) Fichier[NomChamp] = valeur.ToString();
+
+            Fichier.Update(); // important, rembeber changes
+            
             ClientCtx.ExecuteQuery();
 
         }
@@ -162,7 +168,7 @@ namespace recupMetaDonnees
 
             Fichier = fileToUpload.ListItemAllFields;
             ClientCtx.Load(Fichier);
-            SetCollValue("ContentTypeId", TypeDuFichier.Id);
+            SetCollValue("Content Type", TypeDuFichier.Name);
             string[] titre = cut.Last().Split('.');
             SetCollValue("Title", titre.First());
             // Now invoke the server, just one time
@@ -224,7 +230,7 @@ namespace recupMetaDonnees
                 List<Field> collectionConverti = (List<Field>)collection;
                 foreach (Field field in collectionConverti)
                 {
-                    listARetourner.Add(field.Title);
+                     listARetourner.Add(field.Title);
                 }
             }
             else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")
