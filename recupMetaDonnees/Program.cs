@@ -20,23 +20,17 @@ namespace recupMetaDonnees
 
             InstanceBot i = new InstanceBot(URL, titreFichier);
 
-            i.getAllSubWebs();
-            i.getFoldersSite("Compta");
-            i.getFolderContentTypes(nomListe);
-            i.getChampsDunContentType(nomContentType);
+            i.GetAllSubWebs();
+            i.GetFoldersSite("Compta");
+            i.GetFolderContentTypes(nomListe);
+            i.GetChampsDunContentType(nomContentType);
+            i.SetContentTypeWithString(nomContentType);
+            InstanceBot.ConvertToString(i.ListDesField).ForEach(Console.WriteLine);
+            i.ToUploadFile();
+            i.SetCollValue("Title", "Encule");
+            i.SetCollValue("Cout2", "666");
+           i.SetCollValue("Payeee", "true");
 
-            InstanceBot.convertToString(i.listDesSites).ForEach(Console.WriteLine);
-            Console.WriteLine("-----------------------");
-            InstanceBot.convertToString(i.listDesDossier).ForEach(Console.WriteLine);
-            Console.WriteLine("-----------------------");
-            InstanceBot.convertToString(i.listDesContentType).ForEach(Console.WriteLine);
-            Console.WriteLine("-----------------------");
-            InstanceBot.convertToString(i.listDesField).ForEach(Console.WriteLine);
-
-            i.setContentTypeWithString(nomContentType);
-            i.uploadFile();
-            i.setCollValue("Cout2", 955);
-            
             Console.ReadLine();
         }
     }
