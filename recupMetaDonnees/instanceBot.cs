@@ -67,7 +67,7 @@ namespace recupMetaDonnees
             }
         }
 
-        public void GetFoldersSite(string nomSite)
+        public void GetSiteFolders(string nomSite)
         {
             //Met a jour le site choisis
             SetWebWithString(nomSite);
@@ -82,7 +82,7 @@ namespace recupMetaDonnees
 
             foreach (List list in listColl)
             {
-                if (list.BaseTemplate == 101) // id dossier
+                if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
                 {
                     ListDesDossier.Add(list);
                 }
