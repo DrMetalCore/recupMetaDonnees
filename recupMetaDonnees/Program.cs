@@ -21,16 +21,17 @@ namespace recupMetaDonnees
             InstanceBot i = new InstanceBot(URL, titreFichier);
 
             i.GetAllSubWebs();
-            i.GetFoldersSite("Compta");
+            i.GetSiteFolders("Projet");
+            InstanceBot.ConvertToString(i.ListDesDossier).ForEach(Console.WriteLine);
+            /*
             i.GetFolderContentTypes(nomListe);
             i.GetChampsDunContentType(nomContentType);
             i.SetContentTypeWithString(nomContentType);
-            InstanceBot.ConvertToString(i.ListDesField).ForEach(Console.WriteLine);
             i.ToUploadFile();
             i.SetCollValue("Title", "Encule");
             i.SetCollValue("Cout2", "666");
            i.SetCollValue("Payeee", "true");
-
+           */
             Console.ReadLine();
         }
     }
