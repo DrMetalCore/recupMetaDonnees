@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace recupMetaDonnees
 {
-    class InstanceBot
+    public class InstanceBot
     {
         private string domaine { get; set; }
         private string filePath { get; set; }
@@ -21,13 +21,13 @@ namespace recupMetaDonnees
         private ListItem fichier { get; set; }
 
 
-        public List<Web> listDesSites { get; }
-        public List<List> listDesDossier { get;}
-        public ContentTypeCollection contentTypeColl { get; set; }
-        public FieldCollection fieldColl { get; set; }
+        public List<Web> listDesSites { get; set; }
+        public List<List> listDesDossier { get; set; }
+        public List<ContentType> listDesContentType { get; set; }
+        public List<Field> listDesField { get; set; }
 
         /* Peux être inutile
-        List<string> listDesSitesString
+        public List<string> listDesSitesString { get; set; }
         List<string> listDesDossierString;
         List<string> contentTypeCollString;
         List<string> fieldCollString;
@@ -42,15 +42,18 @@ namespace recupMetaDonnees
 
             listDesSites = new List<Web>();
             listDesDossier = new List<List>();
+            listDesContentType = new List<ContentType>();
+            listDesField = new List<Field>();
+
+            getAllSubWebs();
 
         }
         public void getAllSubWebs()
         {
-            
             // Get the SharePoint web  
             Web web = clientContext.Web;
             clientContext.Load(web, website => website.Webs, website => website.Title);
-            
+
             // Execute the query to the server  
             clientContext.ExecuteQuery();
 
@@ -60,10 +63,8 @@ namespace recupMetaDonnees
                 string newpath = domaine + subWeb.ServerRelativeUrl;
                 listDesSites.Add(subWeb);
                 clientContext = new ClientContext(newpath);
-                if (subWeb.Webs != null) GetAllSubWebs();
+                if (subWeb.Webs != null) getAllSubWebs();
             }
-            
-            
         }
 
         public void getFoldersSite(string nomSite)
@@ -73,99 +74,67 @@ namespace recupMetaDonnees
 
             //Get the all list collection 
             ListCollection listColl = clientContext.Web.Lists;
-            
+
             // Execute query. 
             clientContext.Load(listColl, lists => lists.Include(testList => testList.Title,
                                                                 testList => testList.BaseTemplate));
             clientContext.ExecuteQuery();
-   
-            foreach(List list in listColl)
+
+            foreach (List list in listColl)
             {
-                if (list.BaseTemplate == 101 ) // id dossier
+                if (list.BaseTemplate == 101) // id dossier
                 {
                     listDesDossier.Add(list);
                 }
-                
+
             }
 
         }
 
         public void getFolderContentTypes(string nomListe)
         {
-            
-           
+
+
             // Get the content type collection for the list nomListe
             nomDossier = nomListe;
-            contentTypeColl = clientContext.Web.Lists.GetByTitle(nomDossier).ContentTypes;
+            ContentTypeCollection contentTypeColl = clientContext.Web.Lists.GetByTitle(nomDossier).ContentTypes;
             //Execute the reques
             clientContext.Load(contentTypeColl);
             clientContext.ExecuteQuery();
 
-
-            
+            foreach (ContentType c in contentTypeColl)
+            {
+                listDesContentType.Add(c);
+            }
         }
 
         public void getChampsDunContentType(string nomContentType)
         {
             nomChamp = nomContentType;
             //// Get the field  collection for the content type nomContentType contenu dans la collection contentTypeCollection
-            foreach (ContentType ct in contentTypeColl)
+            foreach (ContentType ct in listDesContentType)
             {
-                if(ct.Name== nomChamp)
+                if (ct.Name == nomChamp)
                 {
                     //Recupération des champs 
-                    fieldColl = ct.Fields;
+                    FieldCollection fieldColl = ct.Fields;
                     //Execution de la requette
                     clientContext.Load(fieldColl);
                     clientContext.ExecuteQuery();
+
+                    foreach (Field f in fieldColl)
+                    {
+                        listDesField.Add(f);
+                    }
                 }
 
             }
-            
+
         }
-        
+
         //Pour convertir la collection il faut mettre null dans les autres paramètres 
-        public static List<string> convertToString(object collection)
-        {
-            List<string> listARetourner = new List<string>();
-            
-            if (collection.GetType().ToString()== "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.List]")
-            {
-                List<List> collectionConverti = (List<List>)collection;
-                foreach (List list in collectionConverti)
-                {
-                    listARetourner.Add(list.Title);
-                }
-            }
-            else if (collection.GetType().ToString() == "Microsoft.SharePoint.Client.ContentTypeCollection")
-            {
-                ContentTypeCollection collectionConverti = (ContentTypeCollection)collection;
-                foreach (ContentType contentType in collectionConverti)
-                {
-                    listARetourner.Add(contentType.Name);
-                }
-            }
-            else if (collection.GetType().ToString() == "Microsoft.SharePoint.Client.FieldCollection")
-            {
-                FieldCollection collectionConverti = (FieldCollection)collection;
-                foreach (Field field in collectionConverti)
-                {
-                    listARetourner.Add(field.Title);
-                }
-            }
-            else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")
-            {
-                List<Web> collectionConverti = (List<Web>)collection;
-                foreach (Web w in collectionConverti)
-                {
-                    listARetourner.Add(w.Title);
-                }
-            }
-            
-            return listARetourner;
-        }
 
-        public void setCollValue(string nomColl,  object valeur)
+        public void setCollValue(string nomColl, object valeur)
         {
             nomChamp = nomColl;
             valeurChamp = valeur;
@@ -186,15 +155,15 @@ namespace recupMetaDonnees
             string[] cut = filePath.Split('/');
             fci.Url = cut.Last();
             fci.Overwrite = true;
-                    
+
             File fileToUpload = folder.Files.Add(fci);
             clientContext.Load(fileToUpload);
 
             fichier = fileToUpload.ListItemAllFields;
             clientContext.Load(fichier);
-            setCollValue("ContentTypeId",typeDuFichier.Id);
+            setCollValue("ContentTypeId", typeDuFichier.Id);
             string[] titre = cut.Last().Split('.');
-            setCollValue("Title",titre.First());
+            setCollValue("Title", titre.First());
             // Now invoke the server, just one time
 
             clientContext.ExecuteQuery();
@@ -203,11 +172,11 @@ namespace recupMetaDonnees
 
         public void setContentTypeWithString(string contentString)
         {
-            foreach (ContentType contentType in contentTypeColl)
+            foreach (ContentType contentType in listDesContentType)
             {
                 if (contentType.Name == contentString) typeDuFichier = contentType;
             }
-            
+
         }
 
         public void setWebWithString(string contentString, List<Web> webColl)
@@ -231,6 +200,43 @@ namespace recupMetaDonnees
             clientContext = new ClientContext(domaine + site.ServerRelativeUrl);
 
         }
+        public static List<string> convertToString(object collection)
+        {
+            List<string> listARetourner = new List<string>();
+            if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.List]")
+            {
+                List<List> collectionConverti = (List<List>)collection;
+                foreach (List list in collectionConverti)
+                {
+                    listARetourner.Add(list.Title);
+                }
+            }
+            else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.ContentType]")
+            {
+                List<ContentType> collectionConverti = (List<ContentType>)collection;
+                foreach (ContentType contentType in collectionConverti)
+                {
+                    listARetourner.Add(contentType.Name);
+                }
+            }
+            else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Field]")
+            {
+                List<Field> collectionConverti = (List<Field>)collection;
+                foreach (Field field in collectionConverti)
+                {
+                    listARetourner.Add(field.Title);
+                }
+            }
+            else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")
+            {
+                List<Web> collectionConverti = (List<Web>)collection;
+                foreach (Web w in collectionConverti)
+                {
+                    listARetourner.Add(w.Title);
+                }
+            }
 
+            return listARetourner;
+        }
     }
 }

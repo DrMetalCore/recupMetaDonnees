@@ -29,14 +29,14 @@ namespace recupMetaDonnees
             Console.WriteLine("-----------------------");
             InstanceBot.convertToString(i.listDesDossier).ForEach(Console.WriteLine);
             Console.WriteLine("-----------------------");
-            InstanceBot.convertToString(i.contentTypeColl).ForEach(Console.WriteLine);
+            InstanceBot.convertToString(i.listDesContentType).ForEach(Console.WriteLine);
             Console.WriteLine("-----------------------");
-            InstanceBot.convertToString(i.fieldColl).ForEach(Console.WriteLine);
+            InstanceBot.convertToString(i.listDesField).ForEach(Console.WriteLine);
 
             i.setContentTypeWithString(nomContentType);
             i.uploadFile();
             i.setCollValue("Cout2", 955);
-
+            
             Console.ReadLine();
         }
     }
