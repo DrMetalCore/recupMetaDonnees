@@ -12,8 +12,7 @@ namespace recupMetaDonnees
         private string Domaine { get; set; }
         private string FilePath { get; set; }
         public string NomDossier { get; set; }
-        public string NomChamp { get; set; }
-        public object ValeurChamp { get; set; }
+        
 
         private Web Site { get; set; }
         private ContentType TypeDuFichier { get; set; }
@@ -136,14 +135,10 @@ namespace recupMetaDonnees
 
         public void SetCollValue(string nomColl, object valeur)
         {
-
-            NomChamp = nomColl;
-            ValeurChamp = valeur;
-
             Field f = ListDesField.Find(field => field.Title == nomColl);
-            if (f.TypeAsString == "Boolean") Fichier[NomChamp] = Convert.ToBoolean(valeur);
-            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency") Fichier[NomChamp] = Convert.ToInt32(valeur);
-            else if (f.TypeAsString == "Text" ) Fichier[NomChamp] = valeur.ToString();
+            if (f.TypeAsString == "Boolean") Fichier[nomColl] = Convert.ToBoolean(valeur);
+            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency") Fichier[nomColl] = Convert.ToInt32(valeur);
+            else if (f.TypeAsString == "Text" ) Fichier[nomColl] = valeur.ToString();
 
             Fichier.Update(); // important, rembeber changes
             
@@ -173,7 +168,7 @@ namespace recupMetaDonnees
             SetCollValue("Title", titre.First());
             // Now invoke the server, just one time
 
-            ClientCtx.ExecuteQuery();
+            ClientCtx.ExecuteQuery();   
         }
 
         public void SetContentTypeWithString(string contentString)
