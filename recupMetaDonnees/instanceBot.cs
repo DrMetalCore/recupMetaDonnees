@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Net;
+using System.Security;
 
 namespace recupMetaDonnees
 {
@@ -11,7 +13,10 @@ namespace recupMetaDonnees
     {
         private string Domaine { get; set; }
         private string FilePath { get; set; }
-        public string NomDossier { get; set; }
+        private string NomDossier { get; set; }
+        private string Login;
+        private string Mdp;
+        private string DomaineUser;
         
 
         private Web Site { get; set; }
@@ -32,12 +37,15 @@ namespace recupMetaDonnees
         List<string> fieldCollString;
         */
 
-        public InstanceBot(string url, string chemin)
+        public InstanceBot(string url, string chemin, string log, string pwd, string dom)
         {
             ClientCtx = new ClientContext(url);
             FilePath = chemin;
             string[] split = ClientCtx.Url.Split('/');
             Domaine = split[0] + "//" + split[2];
+            Login = log;
+            Mdp = pwd;
+            DomaineUser = dom;
 
             ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
@@ -146,6 +154,7 @@ namespace recupMetaDonnees
                     //Recupération des champs 
                     FieldCollection fieldColl = ct.Fields;
                     //Execution de la requette
+                   // ClientCtx.Credentials = new NetworkCredential();
                     ClientCtx.Load(fieldColl);
                     try
                     {
@@ -231,42 +240,38 @@ namespace recupMetaDonnees
         {
 
             // Add the ListItem
-            if (NomDossier == "Documents") NomDossier = "Shared Documents";
-            Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
-            FileCreationInformation fci = new FileCreationInformation();
-            try
-            { 
-                fci.Content = System.IO.File.ReadAllBytes(FilePath);
-            }
-            catch
+            using (ClientCtx = new ClientContext(ClientCtx.Url))
             {
-                Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
-                Console.Read();
-                System.Environment.Exit(-6);
-            }
-            string[] cut = FilePath.Split('/');
-            fci.Url = cut.Last();
-            fci.Overwrite = true;
+                ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
+                if (NomDossier == "Documents") NomDossier = "Shared Documents";
+                Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
+                FileCreationInformation fci = new FileCreationInformation();
+                try
+                { 
+                    fci.Content = System.IO.File.ReadAllBytes(FilePath);
+                }
+                catch
+                {
+                    Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
+                    Console.Read();
+                    System.Environment.Exit(-6);
+                }
+                string[] cut = FilePath.Split('/');
+                fci.Url = cut.Last();
+                fci.Overwrite = true;
 
-            File fileToUpload = folder.Files.Add(fci);
-            ClientCtx.Load(fileToUpload);
+                File fileToUpload = folder.Files.Add(fci);
+                ClientCtx.Load(fileToUpload);
 
-            Fichier = fileToUpload.ListItemAllFields;
-            ClientCtx.Load(Fichier);
-            try
-            {
+                Fichier = fileToUpload.ListItemAllFields;
+                ClientCtx.Load(Fichier);
                 ClientCtx.ExecuteQuery();
+                SetCollValue("Content Type", TypeDuFichier.Name);
+                string[] titre = cut.Last().Split('.');
+                SetCollValue("Title", titre.First());
+                // Now invoke the server, just one time
+
             }
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier les données du fichier");
-                Console.Read();
-                System.Environment.Exit(-7);
-            }
-            SetCollValue("Content Type", TypeDuFichier.Name);
-            string[] titre = cut.Last().Split('.');
-            SetCollValue("Title", titre.First());
-            // Now invoke the server, just one time
 
         }
 
