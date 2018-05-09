@@ -16,7 +16,7 @@ namespace recupMetaDonnees
             string URL = "http://loca-mle-w16:81/sites/testBot";
             string nomListe = "Facture";
             string nomContentType = "Facture";
-            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
+            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest4.txt";
 
             InstanceBot i = new InstanceBot(URL, titreFichier);
 
@@ -28,8 +28,8 @@ namespace recupMetaDonnees
             i.GetChampsDunContentType(nomContentType);
             i.SetContentTypeWithString(nomContentType);
             i.ToUploadFile();
-            i.SetCollValue("Title", "Final test");
-            i.SetCollValue("Coudioldt2", "1999");
+            i.SetCollValue("Title", "Final test2 credi");
+            i.SetCollValue("Cout2", "1998");
            i.SetCollValue("Payeee", "true");
            
             Console.ReadLine();
