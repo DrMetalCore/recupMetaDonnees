@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Windows;
 using System.Threading.Tasks;
 
 namespace recupMetaDonnees
@@ -54,7 +54,16 @@ namespace recupMetaDonnees
             ClientCtx.Load(web, website => website.Webs, website => website.Title);
 
             // Execute the query to the server  
-            ClientCtx.ExecuteQuery();
+            try
+            {
+                ClientCtx.ExecuteQuery();
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans l'exéctution de la requete pour avoir les sites veuillez verifier l'url");
+                Console.Read();
+                System.Environment.Exit(-1);
+            }
 
             // Loop through all the webs  
             foreach (Web subWeb in web.Webs)
@@ -77,7 +86,16 @@ namespace recupMetaDonnees
             // Execute query. 
             ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
                                                                 testList => testList.BaseTemplate));
-            ClientCtx.ExecuteQuery();
+            try
+            {
+                ClientCtx.ExecuteQuery();
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
+                Task.Delay(4000);
+                System.Environment.Exit(-2);
+            }
 
             foreach (List list in listColl)
             {
@@ -99,7 +117,17 @@ namespace recupMetaDonnees
             ContentTypeCollection contentTypeColl = ClientCtx.Web.Lists.GetByTitle(NomDossier).ContentTypes;
             //Execute the reques
             ClientCtx.Load(contentTypeColl);
-            ClientCtx.ExecuteQuery();
+            
+            try
+            {
+                ClientCtx.ExecuteQuery();
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
+                Console.Read();
+                System.Environment.Exit(-3);
+            }
 
             foreach (ContentType c in contentTypeColl)
             {
@@ -119,7 +147,17 @@ namespace recupMetaDonnees
                     FieldCollection fieldColl = ct.Fields;
                     //Execution de la requette
                     ClientCtx.Load(fieldColl);
-                    ClientCtx.ExecuteQuery();
+                    try
+                    {
+                        ClientCtx.ExecuteQuery();
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Quelquechose s'est mal passé dans la récupération des champs  veuillez verifier le nom du content type");
+                        Console.Read();
+                        System.Environment.Exit(-4);
+                    }
+               
 
                     foreach (Field f in fieldColl)
                     {
@@ -135,14 +173,57 @@ namespace recupMetaDonnees
 
         public void SetCollValue(string nomColl, object valeur)
         {
+
             Field f = ListDesField.Find(field => field.Title == nomColl);
-            if (f.TypeAsString == "Boolean") Fichier[nomColl] = Convert.ToBoolean(valeur);
-            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency") Fichier[nomColl] = Convert.ToInt32(valeur);
-            else if (f.TypeAsString == "Text" ) Fichier[nomColl] = valeur.ToString();
+            if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
+            else if (f.TypeAsString == "Boolean")
+            {
+                try
+                {
+                    Fichier[nomColl] = Convert.ToBoolean(valeur);
+                }
+                catch
+                {
+                    Console.WriteLine("L'entré n'était pas un booleen");
+                }
+            }
+            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency")
+            {
+                try
+                {
+                    Fichier[nomColl] = Convert.ToInt32(valeur);
+                }
+                catch
+                {
+                    Console.WriteLine("L'entré n'était pas un nombre");
+                }
+
+            }
+            else if (f.TypeAsString == "Text" )
+            {
+                try
+                {
+                    Fichier[nomColl] = valeur.ToString();
+                }
+                catch
+                {
+                    Console.WriteLine("L'entré n'était pas une chaine de caractère");
+                }
+            }
+                
 
             Fichier.Update(); // important, rembeber changes
-            
-            ClientCtx.ExecuteQuery();
+
+            try
+            {
+                ClientCtx.ExecuteQuery();
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans la mofication de la valeur d'un champs veuillez verifier le le champs et la valeur");
+                Console.Read();
+                System.Environment.Exit(-5);
+            }
 
         }
 
@@ -153,7 +234,16 @@ namespace recupMetaDonnees
             if (NomDossier == "Documents") NomDossier = "Shared Documents";
             Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
             FileCreationInformation fci = new FileCreationInformation();
-            fci.Content = System.IO.File.ReadAllBytes(FilePath);
+            try
+            { 
+                fci.Content = System.IO.File.ReadAllBytes(FilePath);
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
+                Console.Read();
+                System.Environment.Exit(-6);
+            }
             string[] cut = FilePath.Split('/');
             fci.Url = cut.Last();
             fci.Overwrite = true;
@@ -163,12 +253,21 @@ namespace recupMetaDonnees
 
             Fichier = fileToUpload.ListItemAllFields;
             ClientCtx.Load(Fichier);
+            try
+            {
+                ClientCtx.ExecuteQuery();
+            }
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier les données du fichier");
+                Console.Read();
+                System.Environment.Exit(-7);
+            }
             SetCollValue("Content Type", TypeDuFichier.Name);
             string[] titre = cut.Last().Split('.');
             SetCollValue("Title", titre.First());
             // Now invoke the server, just one time
 
-            ClientCtx.ExecuteQuery();   
         }
 
         public void SetContentTypeWithString(string contentString)
@@ -239,5 +338,7 @@ namespace recupMetaDonnees
 
             return listARetourner;
         }
+
+       
     }
 }
