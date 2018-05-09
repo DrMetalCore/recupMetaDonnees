@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Net;
+using System.Security;
 
 namespace recupMetaDonnees
 {
@@ -12,7 +13,10 @@ namespace recupMetaDonnees
     {
         private string Domaine { get; set; }
         private string FilePath { get; set; }
-        public string NomDossier { get; set; }
+        private string NomDossier { get; set; }
+        private string Login;
+        private string Mdp;
+        private string DomaineUser;
         
 
         private Web Site { get; set; }
@@ -33,12 +37,15 @@ namespace recupMetaDonnees
         List<string> fieldCollString;
         */
 
-        public InstanceBot(string url, string chemin)
+        public InstanceBot(string url, string chemin, string log, string pwd, string dom)
         {
             ClientCtx = new ClientContext(url);
             FilePath = chemin;
             string[] split = ClientCtx.Url.Split('/');
             Domaine = split[0] + "//" + split[2];
+            Login = log;
+            Mdp = pwd;
+            DomaineUser = dom;
 
             ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
@@ -235,7 +242,7 @@ namespace recupMetaDonnees
             // Add the ListItem
             using (ClientCtx = new ClientContext(ClientCtx.Url))
             {
-                ClientCtx.Credentials = new NetworkCredential("maxime", "surfrider741258963", "LOCA");
+                ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
                 if (NomDossier == "Documents") NomDossier = "Shared Documents";
                 Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
                 FileCreationInformation fci = new FileCreationInformation();

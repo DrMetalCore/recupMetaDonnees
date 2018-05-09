@@ -16,9 +16,9 @@ namespace recupMetaDonnees
             string URL = "http://loca-mle-w16:81/sites/testBot";
             string nomListe = "Facture";
             string nomContentType = "Facture";
-            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest4.txt";
+            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
-            InstanceBot i = new InstanceBot(URL, titreFichier);
+            InstanceBot i = new InstanceBot(URL, titreFichier, "maxime", "surfrider741258963","LOCA");
 
             i.GetAllSubWebs();
             i.GetSiteFolders("Compta");
