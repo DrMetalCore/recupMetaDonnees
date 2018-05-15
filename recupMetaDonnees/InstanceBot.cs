@@ -49,7 +49,7 @@ namespace recupMetaDonnees
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            //GetAllSubWebs();
+            GetAllSubWebs();
 
         }
         public void GetAllSiteCollections()
@@ -102,6 +102,14 @@ namespace recupMetaDonnees
 
         public void GetSiteFolders(string nomSite)
         {
+            Web Site = null;
+            foreach (Web web in ListDesSites)
+            {
+                    if (web.Title == nomSite) Site = web;
+            }
+            
+            //Update the client context with the selected site
+            ClientCtx = new ClientContext(Domaine + Site.ServerRelativeUrl);
 
             //Get the all list collection 
             ListCollection listColl = ClientCtx.Web.Lists;
@@ -128,7 +136,7 @@ namespace recupMetaDonnees
                 }
 
             }
-            ClientCtx = new ClientContext(ClientCtx.Url +"/"+ nomSite);
+            
         }
 
         public void GetFolderContentTypes(string nomListe)
@@ -189,6 +197,7 @@ namespace recupMetaDonnees
                         {
                             
                             if (f.FromBaseType == false) ListDesField.Add(f);
+                            if (f.Title == "Content Type") ListDesField.Add(f);
                         }
                     }
                 }
@@ -203,8 +212,8 @@ namespace recupMetaDonnees
         {
 
             Field f = ListDesField.Find(field => field.Title == nomColl);
-            if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
-            else if (f.TypeAsString == "Boolean")
+            //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
+             if (f.TypeAsString == "Boolean")
             {
                 try
                 {
@@ -327,7 +336,7 @@ namespace recupMetaDonnees
                 List<Field> collectionConverti = (List<Field>)collection;
                 foreach (Field field in collectionConverti)
                 {
-                     listARetourner.Add(field.Title);
+                    if (field.Title !="Content Type") listARetourner.Add(field.Title);
                 }
             }
             else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")

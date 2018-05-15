@@ -23,7 +23,7 @@ namespace recupMetaDonnees
             string nomContentType = "Facture";
             string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
-            InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","LOCA");
+            InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","loca");
             
             // i.GetAllSiteCollections();
             /*
@@ -60,18 +60,18 @@ namespace recupMetaDonnees
             */
             
             i.GetSiteFolders("Compta");
-            //InstanceBot.ConvertToString(i.ListDesDossier).ForEach(Console.WriteLine);
+            InstanceBot.ConvertToString(i.ListDesSites).ForEach(Console.WriteLine);
 
             i.GetFolderContentTypes(nomListe);
             i.GetChampsDunContentType(nomContentType);
             InstanceBot.ConvertToString( i.ListDesField).ForEach(Console.WriteLine);
-            /*
+            
             i.SetContentTypeWithString(nomContentType);
             i.ToUploadFile();
-            i.SetCollValue("Title", "Final test2 credi");
-            i.SetCollValue("Cout2", "1998");
-           i.SetCollValue("Payeee", "true");
-           */
+            i.SetCollValue("Title", "Fidsnal test2 credi");
+            i.SetCollValue("Cout2", "19598");
+           i.SetCollValue("Payeee", "false");
+           
             Console.ReadLine();
         }
 
