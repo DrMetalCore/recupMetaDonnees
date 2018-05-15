@@ -1,14 +1,8 @@
-﻿using Microsoft.SharePoint;
-using Microsoft.SharePoint.Client;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 
 namespace recupMetaDonnees
@@ -17,17 +11,17 @@ namespace recupMetaDonnees
     {
         static void Main(string[] args)
         {
-            string URL = "http://loca-mle-w16:81/sites/testBot";
-            //string URL = "http://loca-fcn-sp16/sites";
+            //string URL = "http://loca-mle-w16/sites/testBot";
+           string URL = "http://loca-fcn-sp16/sites/it";
             string nomListe = "Facture";
             string nomContentType = "Facture";
             string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
-            InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","loca");
+           // InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","loca");
             
             // i.GetAllSiteCollections();
-            /*
-            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create("http://loca-fcn-sp16/sites/proj/_api/search/query?querytext='contentclass:sts_site'");
+            
+            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create("http://loca-fcn-sp16/sites/search/_api/search/query?querytext='contentclass:sts_site'&trimduplicates=false&rowlimit=100");
 
             endpointRequest.Method = "GET";
             endpointRequest.Accept = "application/json;odata=verbose";
@@ -43,9 +37,13 @@ namespace recupMetaDonnees
                 
                 JObject jobj = JObject.Parse(response);
                 
-                for (int ind = 0; ind < 100; ind++)
+                for (int ind = 0; ind < jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"].Count(); ind++)
                 {
-                    Console.WriteLine(jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][6]["Value"]);
+                    string urlCollection = jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][6]["Value"].ToString();
+                    if (urlCollection.Contains("loca-fcn-sp16/sites/")==true)
+                    {
+                        Console.WriteLine(urlCollection);
+                    }
                 }
                 
                 responseReader.Close();
@@ -57,8 +55,8 @@ namespace recupMetaDonnees
             {
                 Console.Out.WriteLine(e.Message); Console.ReadLine();
             }
-            */
             
+            /*
             i.GetSiteFolders("Compta");
             InstanceBot.ConvertToString(i.ListDesSites).ForEach(Console.WriteLine);
 
@@ -70,9 +68,10 @@ namespace recupMetaDonnees
             i.ToUploadFile();
             i.SetCollValue("Title", "Fidsnal test2 credi");
             i.SetCollValue("Cout2", "19598");
-           i.SetCollValue("Payeee", "false");
+            i.SetCollValue("Payeee", "false");
            
             Console.ReadLine();
+            */
         }
 
 
