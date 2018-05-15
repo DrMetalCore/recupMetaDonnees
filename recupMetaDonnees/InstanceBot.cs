@@ -2,10 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using System.Threading.Tasks;
 using System.Net;
-using System.Security;
 
 namespace recupMetaDonnees
 {
@@ -18,8 +16,7 @@ namespace recupMetaDonnees
         private string Mdp;
         private string DomaineUser;
         
-
-        private Web Site { get; set; }
+       
         private ContentType TypeDuFichier { get; set; }
         private ClientContext ClientCtx { get; set; }
         private ListItem Fichier { get; set; }
@@ -52,10 +49,30 @@ namespace recupMetaDonnees
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            GetAllSubWebs();
+            //GetAllSubWebs();
 
         }
-        public void GetAllSubWebs()
+        public void GetAllSiteCollections()
+        {
+            
+            ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
+
+            Web site = ClientCtx.Web;
+
+            ClientCtx.Load(ClientCtx.Web.Webs);
+            ClientCtx.ExecuteQuery();
+
+            string allsitecollections = "";
+
+            for (int i = 0; i < ClientCtx.Web.Webs.Count; i++)
+            {
+
+                allsitecollections = allsitecollections + ClientCtx.Web.Webs[i].ServerRelativeUrl + "\n";
+                
+            }
+            Console.WriteLine(allsitecollections);
+        }
+        private void GetAllSubWebs()
         {
             // Get the SharePoint web  
             Web web = ClientCtx.Web;
@@ -85,8 +102,6 @@ namespace recupMetaDonnees
 
         public void GetSiteFolders(string nomSite)
         {
-            //Met a jour le site choisis
-            SetWebWithString(nomSite);
 
             //Get the all list collection 
             ListCollection listColl = ClientCtx.Web.Lists;
@@ -113,7 +128,7 @@ namespace recupMetaDonnees
                 }
 
             }
-
+            ClientCtx = new ClientContext(ClientCtx.Url +"/"+ nomSite);
         }
 
         public void GetFolderContentTypes(string nomListe)
@@ -126,16 +141,16 @@ namespace recupMetaDonnees
             //Execute the reques
             ClientCtx.Load(contentTypeColl);
             
-            try
-            {
+            //try
+            //{
                 ClientCtx.ExecuteQuery();
-            }
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
-                Console.Read();
-                System.Environment.Exit(-3);
-            }
+            //}
+            //catch
+            //{
+              //  Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
+                //Console.Read();
+                //System.Environment.Exit(-3);
+           // }
 
             foreach (ContentType c in contentTypeColl)
             {
@@ -167,10 +182,14 @@ namespace recupMetaDonnees
                         System.Environment.Exit(-4);
                     }
                
-
+                    
                     foreach (Field f in fieldColl)
                     {
-                        ListDesField.Add(f);
+                        if(true)
+                        {
+                            
+                            if (f.FromBaseType == false) ListDesField.Add(f);
+                        }
                     }
                 }
 
@@ -284,27 +303,6 @@ namespace recupMetaDonnees
 
         }
 
-        public void SetWebWithString(string contentString, List<Web> webColl)
-        {
-            foreach (Web web in webColl)
-            {
-                if (web.Title == contentString) Site = web;
-            }
-
-        }
-
-
-        public void SetWebWithString(string webString)
-        {
-            foreach (Web web in ListDesSites)
-            {
-                if (web.Title == webString) Site = web;
-            }
-
-            //Update the client context with the selected site
-            ClientCtx = new ClientContext(Domaine + Site.ServerRelativeUrl);
-
-        }
         public static List<string> ConvertToString(object collection)
         {
             List<string> listARetourner = new List<string>();
