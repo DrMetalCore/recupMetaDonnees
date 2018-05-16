@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace recupMetaDonnees
 {
@@ -22,7 +24,8 @@ namespace recupMetaDonnees
         private ListItem Fichier { get; set; }
 
 
-        public List<Web> ListDesSites { get; set; }
+        public Dictionary<string, string> ListDesSiteCollections { get; set; }
+        //public List<Web> ListDesSites { get; set; }
         public List<List> ListDesDossier { get; set; }
         public List<ContentType> ListDesContentType { get; set; }
         public List<Field> ListDesField { get; set; }
@@ -44,34 +47,57 @@ namespace recupMetaDonnees
             Mdp = pwd;
             DomaineUser = dom;
 
-            ListDesSites = new List<Web>();
+            ListDesSiteCollections = new Dictionary<string, string>();
+            //ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            GetAllSubWebs();
+            GetAllSiteCollections(url);
+            //GetAllSubWebs();
 
         }
-        public void GetAllSiteCollections()
+        private void GetAllSiteCollections(string url)
         {
-            
-            ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
 
-            Web site = ClientCtx.Web;
+            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create(url+"/_api/search/query?querytext='contentclass:sts_site'&trimduplicates=false&rowlimit=100");
 
-            ClientCtx.Load(ClientCtx.Web.Webs);
-            ClientCtx.ExecuteQuery();
-
-            string allsitecollections = "";
-
-            for (int i = 0; i < ClientCtx.Web.Webs.Count; i++)
+            endpointRequest.Method = "GET";
+            endpointRequest.Accept = "application/json;odata=verbose";
+            NetworkCredential cred = new NetworkCredential("luka", "Axiomestage64", "LOCA");
+            endpointRequest.Credentials = cred;
+            HttpWebResponse endpointResponse = (HttpWebResponse)endpointRequest.GetResponse();
+            try
             {
+                WebResponse webResponse = endpointRequest.GetResponse();
+                Stream webStream = webResponse.GetResponseStream();
+                StreamReader responseReader = new StreamReader(webStream);
+                string response = responseReader.ReadToEnd();
 
-                allsitecollections = allsitecollections + ClientCtx.Web.Webs[i].ServerRelativeUrl + "\n";
-                
+                JObject jobj = JObject.Parse(response);
+
+                for (int ind = 0; ind < jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"].Count(); ind++)
+                {
+
+                    string urlCollection = jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][6]["Value"].ToString();
+                    string nomCollection = jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][3]["Value"].ToString();
+                    if (urlCollection.Contains("loca-fcn-sp16/sites/") == true)
+                    {
+                        string[] split = urlCollection.Split('/');
+                        ListDesSiteCollections.Add(split[4],nomCollection);
+                        
+                    }
+                }
+
+                responseReader.Close();
+
             }
-            Console.WriteLine(allsitecollections);
+            catch (Exception e)
+            {
+                Console.Out.WriteLine(e.Message); Console.ReadLine();
+            }
         }
+        /*
         private void GetAllSubWebs()
         {
             // Get the SharePoint web  
@@ -99,17 +125,19 @@ namespace recupMetaDonnees
                 if (subWeb.Webs != null) GetAllSubWebs();
             }
         }
-
+        */
         public void GetSiteFolders(string nomSite)
         {
-            Web Site = null;
-            foreach (Web web in ListDesSites)
+            
+            foreach (KeyValuePair<string,string> s in ListDesSiteCollections)
             {
-                    if (web.Title == nomSite) Site = web;
+                if (s.Key.Equals( nomSite, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    //Update the client context with the selected site
+                    ClientCtx = new ClientContext(Domaine + "/sites/" + s.Value);
+                }
             }
             
-            //Update the client context with the selected site
-            ClientCtx = new ClientContext(Domaine + Site.ServerRelativeUrl);
 
             //Get the all list collection 
             ListCollection listColl = ClientCtx.Web.Lists;
@@ -117,16 +145,16 @@ namespace recupMetaDonnees
             // Execute query. 
             ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
                                                                 testList => testList.BaseTemplate));
-            try
-            {
+            //try
+            //{
                 ClientCtx.ExecuteQuery();
-            }
+            /*}
             catch
             {
                 Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
                 Task.Delay(4000);
                 System.Environment.Exit(-2);
-            }
+            }*/
 
             foreach (List list in listColl)
             {
@@ -288,7 +316,7 @@ namespace recupMetaDonnees
                 fci.Url = cut.Last();
                 fci.Overwrite = true;
 
-                File fileToUpload = folder.Files.Add(fci);
+                Microsoft.SharePoint.Client.File fileToUpload = folder.Files.Add(fci);
                 ClientCtx.Load(fileToUpload);
 
                 Fichier = fileToUpload.ListItemAllFields;
