@@ -399,6 +399,14 @@ namespace recupMetaDonnees
                     listARetourner.Add(w.Title);
                 }
             }
+            else if (collection.GetType().ToString() == "System.Collections.Generic.Dictionary`2[System.String,System.String]")
+            {
+                Dictionary <string, string> collectionConverti = (Dictionary<string, string>)collection;
+                foreach (KeyValuePair<string,string> w in collectionConverti)
+                {
+                    listARetourner.Add(w.Key);
+                }
+            }
 
             return listARetourner;
         }
