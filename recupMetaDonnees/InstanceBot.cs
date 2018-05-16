@@ -84,8 +84,32 @@ namespace recupMetaDonnees
                     if (urlCollection.Contains("loca-fcn-sp16/sites/") == true)
                     {
                         string[] split = urlCollection.Split('/');
-                        ListDesSiteCollections.Add(split[4],nomCollection);
-                        
+                        ClientCtx = new ClientContext(Domaine + "/sites/" + split[4]);
+                        using (ClientCtx = new ClientContext(ClientCtx.Url))
+                        {
+                            ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
+                            Web rootWeb = ClientCtx.Site.RootWeb;
+                            ClientCtx.Load(rootWeb);
+
+                            BasePermissions bp = new BasePermissions();
+                            bp.Set(PermissionKind.AddListItems);
+                            //
+                            ClientResult<bool> viewListItems = rootWeb.DoesUserHavePermissions(bp);
+                            try
+                            {
+                                ClientCtx.ExecuteQuery();
+                                if (viewListItems.Value)
+                                {
+                                    ListDesSiteCollections.Add(nomCollection, split[4]);
+                                }
+
+                            }
+                            catch
+                            {
+                                Console.WriteLine("\n ---> You don't have access to site {0}\n   -- Exception: ");
+                            }
+
+                        }
                     }
                 }
 
@@ -137,33 +161,33 @@ namespace recupMetaDonnees
                     ClientCtx = new ClientContext(Domaine + "/sites/" + s.Value);
                 }
             }
+
             
-
-            //Get the all list collection 
-            ListCollection listColl = ClientCtx.Web.Lists;
-
-            // Execute query. 
-            ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
-                                                                testList => testList.BaseTemplate));
-            //try
-            //{
-                ClientCtx.ExecuteQuery();
-            /*}
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
-                Task.Delay(4000);
-                System.Environment.Exit(-2);
-            }*/
-
-            foreach (List list in listColl)
-            {
-                if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
+                ListCollection listColl = ClientCtx.Web.Lists;
+                
+            
+                // Execute query. 
+                ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
+                                                                    testList => testList.BaseTemplate));
+                //try
+                //{
+                    ClientCtx.ExecuteQuery();
+                /*}
+                catch
                 {
-                    ListDesDossier.Add(list);
-                }
+                    Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
+                    Task.Delay(4000);
+                    System.Environment.Exit(-2);
+                }*/
 
-            }
+                foreach (List list in listColl)
+                {
+                    if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
+                    {
+                        ListDesDossier.Add(list);
+                    }
+
+                }
             
         }
 

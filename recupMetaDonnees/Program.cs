@@ -19,7 +19,11 @@ namespace recupMetaDonnees
             string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
            InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","loca");
-            
+            foreach (KeyValuePair<string, string> s in i.ListDesSiteCollections)
+            {
+                Console.WriteLine(s.Key);
+                Console.WriteLine("///////////" + s.Value);
+            }
 
             // i.GetAllSiteCollections();
             
