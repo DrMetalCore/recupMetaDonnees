@@ -15,16 +15,21 @@ namespace recupMetaDonnees
             string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
 
            InstanceBot i = new InstanceBot(URL, titreFichier, "luka", "Axiomestage64","loca");
-            InstanceBot.ConvertToString(i.ListDesSiteCollections).ForEach(Console.WriteLine);
+
 
             // i.GetAllSiteCollections();
             
             
             
-            i.GetSiteFolders("it");
+            i.GetSiteFolders("Projects");
             i.GetFolderContentTypes("Documents");
             i.GetChampsDunContentType("Document");
-            Dictionary<string, string> s = new Dictionary<string, string>();
+            foreach (var v in i.ListDesField)
+            {
+                
+                Console.WriteLine(v.Title);
+                Console.WriteLine("///////////////////"+v.Group);
+            }
             Console.ReadLine();
             /*
             i.GetFolderContentTypes(nomListe);

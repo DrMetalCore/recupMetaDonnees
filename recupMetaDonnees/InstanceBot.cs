@@ -1,10 +1,11 @@
 ﻿using Microsoft.SharePoint.Client;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Net;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace recupMetaDonnees
 {
@@ -24,7 +25,7 @@ namespace recupMetaDonnees
 
 
         public Dictionary<string, string> ListDesSiteCollections { get; set; }
-        public List<Web> ListDesSites { get; set; }
+        //public List<Web> ListDesSites { get; set; }
         public List<List> ListDesDossier { get; set; }
         public List<ContentType> ListDesContentType { get; set; }
         public List<Field> ListDesField { get; set; }
@@ -47,13 +48,13 @@ namespace recupMetaDonnees
             DomaineUser = dom;
 
             ListDesSiteCollections = new Dictionary<string, string>();
-            ListDesSites = new List<Web>();
+            //ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            //GetAllSiteCollections(url);
-            GetAllSubWebs();
+            GetAllSiteCollections(url);
+            //GetAllSubWebs();
 
         }
         private void GetAllSiteCollections(string url)
@@ -63,7 +64,7 @@ namespace recupMetaDonnees
 
             endpointRequest.Method = "GET";
             endpointRequest.Accept = "application/json;odata=verbose";
-            NetworkCredential cred = new NetworkCredential("luka", "Axiomestage64", "LOCA");
+            NetworkCredential cred = new NetworkCredential(Login, Mdp, DomaineUser);
             endpointRequest.Credentials = cred;
             HttpWebResponse endpointResponse = (HttpWebResponse)endpointRequest.GetResponse();
             try
@@ -120,7 +121,7 @@ namespace recupMetaDonnees
                 Console.Out.WriteLine(e.Message); Console.ReadLine();
             }
         }
-        
+        /*
         private void GetAllSubWebs()
         {
             // Get the SharePoint web  
@@ -148,7 +149,7 @@ namespace recupMetaDonnees
                 if (subWeb.Webs != null) GetAllSubWebs();
             }
         }
-        
+        */
         public void GetSiteFolders(string nomSite)
         {
             
@@ -246,9 +247,8 @@ namespace recupMetaDonnees
                     {
                         if(true)
                         {
-                            
-                            if (f.FromBaseType == false) ListDesField.Add(f);
-                            if (f.Title == "Content Type") ListDesField.Add(f);
+                            if (f.Group == "Custom Columns" && f.FromBaseType == false) ListDesField.Add(f);
+                            //if (f.Title == "Content Type") ListDesField.Add(f);
                         }
                     }
                 }
@@ -354,7 +354,7 @@ namespace recupMetaDonnees
 
         }
 
-        private void SetContentTypeWithString(string contentString)
+        public void SetContentTypeWithString(string contentString)
         {
             foreach (ContentType contentType in ListDesContentType)
             {
