@@ -1,9 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
 
 
 namespace recupMetaDonnees
@@ -26,6 +22,8 @@ namespace recupMetaDonnees
             
             
             i.GetSiteFolders("it");
+            i.GetFolderContentTypes("Documents");
+            i.GetChampsDunContentType("Document");
             Dictionary<string, string> s = new Dictionary<string, string>();
             Console.ReadLine();
             /*
