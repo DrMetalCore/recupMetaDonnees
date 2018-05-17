@@ -64,7 +64,7 @@ namespace recupMetaDonnees
 
             endpointRequest.Method = "GET";
             endpointRequest.Accept = "application/json;odata=verbose";
-            NetworkCredential cred = new NetworkCredential("luka", "Axiomestage64", "LOCA");
+            NetworkCredential cred = new NetworkCredential(Login, Mdp, DomaineUser);
             endpointRequest.Credentials = cred;
             HttpWebResponse endpointResponse = (HttpWebResponse)endpointRequest.GetResponse();
             try
@@ -247,9 +247,8 @@ namespace recupMetaDonnees
                     {
                         if(true)
                         {
-                            
-                            if (f.FromBaseType == false) ListDesField.Add(f);
-                            if (f.Title == "Content Type") ListDesField.Add(f);
+                            if (f.Group == "Custom Columns" && f.FromBaseType == false) ListDesField.Add(f);
+                            //if (f.Title == "Content Type") ListDesField.Add(f);
                         }
                     }
                 }
