@@ -260,7 +260,7 @@ namespace recupMetaDonnees
                         if(true)
                         {
                            if (f.FromBaseType == false) ListDesField.Add(f);
-                            //if (f.Title == "Content Type") ListDesField.Add(f);
+                           if (f.InternalName == "ContentType") ListDesField.Add(f);
                         }
                     }
                 }
@@ -275,8 +275,9 @@ namespace recupMetaDonnees
         {
 
             Field f = ListDesField.Find(field => field.Title == nomColl);
+            if (f == null ) f = ListDesField.Find(field => field.InternalName == nomColl);
             //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
-             if (f.TypeAsString == "Boolean")
+            if (f.TypeAsString == "Boolean")
             {
                 try
                 {
@@ -334,19 +335,21 @@ namespace recupMetaDonnees
             using (ClientCtx = new ClientContext(ClientCtx.Url))
             {
                 ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
-                if (NomDossier == "Documents") NomDossier = "Shared Documents";
+                //if (NomDossier == "Documents") NomDossier = "Shared Documents";
+                if (NomDossier == "Documents") NomDossier = "Documents partages";
                 Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
                 FileCreationInformation fci = new FileCreationInformation();
-                try
-                { 
+                //try
+                //{ 
                     fci.Content = System.IO.File.ReadAllBytes(FilePath);
-                }
+               /* }
                 catch
                 {
                     Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
                     Console.Read();
                     System.Environment.Exit(-6);
                 }
+                */
                 string[] cut = FilePath.Split('/');
                 fci.Url = cut.Last();
                 fci.Overwrite = true;
@@ -357,7 +360,7 @@ namespace recupMetaDonnees
                 Fichier = fileToUpload.ListItemAllFields;
                 ClientCtx.Load(Fichier);
                 ClientCtx.ExecuteQuery();
-                SetCollValue("Content Type", TypeDuFichier.Name);
+                SetCollValue("ContentType", TypeDuFichier.Name);
                 string[] titre = cut.Last().Split('.');
                 SetCollValue("Title", titre.First());
                 // Now invoke the server, just one time
@@ -399,7 +402,7 @@ namespace recupMetaDonnees
                 List<Field> collectionConverti = (List<Field>)collection;
                 foreach (Field field in collectionConverti)
                 {
-                    if (field.Title !="Content Type") listARetourner.Add(field.Title);
+                    if (field.Title !="Content Type" && field.InternalName!="ContentType") listARetourner.Add(field.Title);
                 }
             }
             else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")

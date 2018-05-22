@@ -27,6 +27,7 @@ namespace recupMetaDonnees
             InstanceBot.ConvertToString(i.ListDesContentType).ForEach(Console.WriteLine);
             Console.WriteLine("/////////////////////////");
             InstanceBot.ConvertToString(i.ListDesField).ForEach(Console.WriteLine);
+            i.ToUploadFile();
             /*
             foreach (var f in i.ListDesField)
             {
