@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using System.Security;
 
 namespace recupMetaDonnees
 {
@@ -15,17 +16,17 @@ namespace recupMetaDonnees
         private string FilePath { get; set; }
         private string NomDossier { get; set; }
         private string Login;
-        private string Mdp;
-        private string DomaineUser;
-        
-       
+        private SecureString Mdp;
+
+
+
         private ContentType TypeDuFichier { get; set; }
         private ClientContext ClientCtx { get; set; }
         private ListItem Fichier { get; set; }
 
 
         public Dictionary<string, string> ListDesSiteCollections { get; set; }
-        //public List<Web> ListDesSites { get; set; }
+        public List<Web> ListDesSites { get; set; }
         public List<List> ListDesDossier { get; set; }
         public List<ContentType> ListDesContentType { get; set; }
         public List<Field> ListDesField { get; set; }
@@ -37,34 +38,37 @@ namespace recupMetaDonnees
         List<string> fieldCollString;
         */
 
-        public InstanceBot(string url, string chemin, string log, string pwd, string dom)
+        public InstanceBot(string url, string chemin, string log, string pwd)
         {
             ClientCtx = new ClientContext(url);
             FilePath = chemin;
             string[] split = ClientCtx.Url.Split('/');
             Domaine = split[0] + "//" + split[2];
             Login = log;
-            Mdp = pwd;
-            DomaineUser = dom;
+
+            SecureString passWord = new SecureString();
+            foreach (char c in pwd.ToCharArray()) passWord.AppendChar(c);
+            Mdp = passWord;
+
 
             ListDesSiteCollections = new Dictionary<string, string>();
-            //ListDesSites = new List<Web>();
+            ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            GetAllSiteCollections(url);
-            //GetAllSubWebs();
+            //GetAllSiteCollections(url);
+            GetAllSubWebs();
 
         }
         private void GetAllSiteCollections(string url)
         {
 
-            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create(url+"/_api/search/query?querytext='contentclass:sts_site'&trimduplicates=false&rowlimit=100");
+            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create(url + "/_api/search/query?querytext='contentclass:sts_site'&trimduplicates=false&rowlimit=100");
 
             endpointRequest.Method = "GET";
             endpointRequest.Accept = "application/json;odata=verbose";
-            NetworkCredential cred = new NetworkCredential(Login, Mdp, DomaineUser);
+            SharePointOnlineCredentials cred = new SharePointOnlineCredentials(Login, Mdp);
             endpointRequest.Credentials = cred;
             HttpWebResponse endpointResponse = (HttpWebResponse)endpointRequest.GetResponse();
             try
@@ -87,7 +91,7 @@ namespace recupMetaDonnees
                         ClientCtx = new ClientContext(Domaine + "/sites/" + split[4]);
                         using (ClientCtx = new ClientContext(ClientCtx.Url))
                         {
-                            ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
+                            ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
                             Web rootWeb = ClientCtx.Site.RootWeb;
                             ClientCtx.Load(rootWeb);
 
@@ -121,74 +125,82 @@ namespace recupMetaDonnees
                 Console.Out.WriteLine(e.Message); Console.ReadLine();
             }
         }
-        /*
+
         private void GetAllSubWebs()
         {
-            // Get the SharePoint web  
-            Web web = ClientCtx.Web;
-            ClientCtx.Load(web, website => website.Webs, website => website.Title);
 
-            // Execute the query to the server  
-            try
+            using (ClientCtx)
             {
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                // Get the SharePoint web  
+                Web web = ClientCtx.Web;
+                ClientCtx.Load(web, website => website.Webs);
+
+                // Execute the query to the server  
+                //try
+                //{
                 ClientCtx.ExecuteQuery();
-            }
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans l'exéctution de la requete pour avoir les sites veuillez verifier l'url");
-                Console.Read();
-                System.Environment.Exit(-1);
-            }
+                //}
+                //catch
+                /*{
+                    Console.WriteLine("Quelquechose s'est mal passé dans l'exéctution de la requete pour avoir les sites veuillez verifier l'url");
+                    Console.Read();
+                    System.Environment.Exit(-1);
+                }
+                */
 
-            // Loop through all the webs  
-            foreach (Web subWeb in web.Webs)
-            {
-                string newpath = Domaine + subWeb.ServerRelativeUrl;
-                ListDesSites.Add(subWeb);
-                ClientCtx = new ClientContext(newpath);
-                if (subWeb.Webs != null) GetAllSubWebs();
+                // Loop through all the webs  
+                foreach (Web subWeb in web.Webs)
+                {
+                    string newpath = Domaine + subWeb.ServerRelativeUrl;
+                    ListDesSites.Add(subWeb);
+
+                    ClientCtx = new ClientContext(newpath);
+                    if (subWeb.Webs != null) GetAllSubWebs();
+
+                }
             }
         }
-        */
+
         public void GetSiteFolders(string nomSite)
         {
-            
-            foreach (KeyValuePair<string,string> s in ListDesSiteCollections)
+
+            foreach (KeyValuePair<string, string> s in ListDesSiteCollections)
             {
-                if (s.Key.Equals( nomSite, StringComparison.InvariantCultureIgnoreCase))
+                if (s.Key.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
                 {
                     //Update the client context with the selected site
                     ClientCtx = new ClientContext(Domaine + "/sites/" + s.Value);
                 }
             }
 
-            
-                ListCollection listColl = ClientCtx.Web.Lists;
-                
-            
-                // Execute query. 
-                ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
-                                                                    testList => testList.BaseTemplate));
-                //try
-                //{
-                    ClientCtx.ExecuteQuery();
-                /*}
-                catch
-                {
-                    Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
-                    Task.Delay(4000);
-                    System.Environment.Exit(-2);
-                }*/
 
-                foreach (List list in listColl)
-                {
-                    if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
-                    {
-                        ListDesDossier.Add(list);
-                    }
+            ListCollection listColl = ClientCtx.Web.Lists;
 
+
+            // Execute query. 
+            ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
+                                                                testList => testList.BaseTemplate));
+            //try
+            //{
+            ClientCtx.ExecuteQuery();
+            /*}
+            catch
+            {
+                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
+                Task.Delay(4000);
+                System.Environment.Exit(-2);
+            }*/
+
+            foreach (List list in listColl)
+            {
+                if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
+                {
+                    ListDesDossier.Add(list);
                 }
-            
+
+            }
+
         }
 
         public void GetFolderContentTypes(string nomListe)
@@ -200,17 +212,17 @@ namespace recupMetaDonnees
             ContentTypeCollection contentTypeColl = ClientCtx.Web.Lists.GetByTitle(NomDossier).ContentTypes;
             //Execute the reques
             ClientCtx.Load(contentTypeColl);
-            
+
             //try
             //{
-                ClientCtx.ExecuteQuery();
+            ClientCtx.ExecuteQuery();
             //}
             //catch
             //{
-              //  Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
-                //Console.Read();
-                //System.Environment.Exit(-3);
-           // }
+            //  Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
+            //Console.Read();
+            //System.Environment.Exit(-3);
+            // }
 
             foreach (ContentType c in contentTypeColl)
             {
@@ -229,7 +241,7 @@ namespace recupMetaDonnees
                     //Recupération des champs 
                     FieldCollection fieldColl = ct.Fields;
                     //Execution de la requette
-                   // ClientCtx.Credentials = new NetworkCredential();
+                    // ClientCtx.Credentials = new NetworkCredential();
                     ClientCtx.Load(fieldColl);
                     try
                     {
@@ -241,14 +253,14 @@ namespace recupMetaDonnees
                         Console.Read();
                         System.Environment.Exit(-4);
                     }
-               
-                    
+
+
                     foreach (Field f in fieldColl)
                     {
-                        if(true)
+                        if (true)
                         {
-                            if (f.Group == "Custom Columns" && f.FromBaseType == false) ListDesField.Add(f);
-                            //if (f.Title == "Content Type") ListDesField.Add(f);
+                            if (f.FromBaseType == false) ListDesField.Add(f);
+                            if (f.InternalName == "ContentType") ListDesField.Add(f);
                         }
                     }
                 }
@@ -263,8 +275,9 @@ namespace recupMetaDonnees
         {
 
             Field f = ListDesField.Find(field => field.Title == nomColl);
+            if (f == null) f = ListDesField.Find(field => field.InternalName == nomColl);
             //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
-             if (f.TypeAsString == "Boolean")
+            if (f.TypeAsString == "Boolean")
             {
                 try
                 {
@@ -287,7 +300,7 @@ namespace recupMetaDonnees
                 }
 
             }
-            else if (f.TypeAsString == "Text" )
+            else if (f.TypeAsString == "Text")
             {
                 try
                 {
@@ -298,7 +311,7 @@ namespace recupMetaDonnees
                     Console.WriteLine("L'entré n'était pas une chaine de caractère");
                 }
             }
-                
+
 
             Fichier.Update(); // important, rembeber changes
 
@@ -321,20 +334,22 @@ namespace recupMetaDonnees
             // Add the ListItem
             using (ClientCtx = new ClientContext(ClientCtx.Url))
             {
-                ClientCtx.Credentials = new NetworkCredential(Login, Mdp, DomaineUser);
-                if (NomDossier == "Documents") NomDossier = "Shared Documents";
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                //if (NomDossier == "Documents") NomDossier = "Shared Documents";
+                if (NomDossier == "Documents") NomDossier = "Documents partages";
                 Folder folder = ClientCtx.Web.GetFolderByServerRelativeUrl(ClientCtx.Url + "/" + NomDossier);
                 FileCreationInformation fci = new FileCreationInformation();
-                try
-                { 
-                    fci.Content = System.IO.File.ReadAllBytes(FilePath);
-                }
-                catch
-                {
-                    Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
-                    Console.Read();
-                    System.Environment.Exit(-6);
-                }
+                //try
+                //{ 
+                fci.Content = System.IO.File.ReadAllBytes(FilePath);
+                /* }
+                 catch
+                 {
+                     Console.WriteLine("Quelquechose s'est mal passé dans le dépot du fichier veuillez verifier le chemin du fichier");
+                     Console.Read();
+                     System.Environment.Exit(-6);
+                 }
+                 */
                 string[] cut = FilePath.Split('/');
                 fci.Url = cut.Last();
                 fci.Overwrite = true;
@@ -345,7 +360,7 @@ namespace recupMetaDonnees
                 Fichier = fileToUpload.ListItemAllFields;
                 ClientCtx.Load(Fichier);
                 ClientCtx.ExecuteQuery();
-                SetCollValue("Content Type", TypeDuFichier.Name);
+                SetCollValue("ContentType", TypeDuFichier.Name);
                 string[] titre = cut.Last().Split('.');
                 SetCollValue("Title", titre.First());
                 // Now invoke the server, just one time
@@ -387,7 +402,7 @@ namespace recupMetaDonnees
                 List<Field> collectionConverti = (List<Field>)collection;
                 foreach (Field field in collectionConverti)
                 {
-                    if (field.Title !="Content Type") listARetourner.Add(field.Title);
+                    if (field.InternalName != "ContentType") listARetourner.Add(field.Title);
                 }
             }
             else if (collection.GetType().ToString() == "System.Collections.Generic.List`1[Microsoft.SharePoint.Client.Web]")
@@ -400,8 +415,8 @@ namespace recupMetaDonnees
             }
             else if (collection.GetType().ToString() == "System.Collections.Generic.Dictionary`2[System.String,System.String]")
             {
-                Dictionary <string, string> collectionConverti = (Dictionary<string, string>)collection;
-                foreach (KeyValuePair<string,string> w in collectionConverti)
+                Dictionary<string, string> collectionConverti = (Dictionary<string, string>)collection;
+                foreach (KeyValuePair<string, string> w in collectionConverti)
                 {
                     listARetourner.Add(w.Key);
                 }
@@ -410,6 +425,6 @@ namespace recupMetaDonnees
             return listARetourner;
         }
 
-       
+
     }
 }
