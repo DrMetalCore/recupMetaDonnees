@@ -17,6 +17,7 @@ namespace recupMetaDonnees
         private string Domaine { get; set; }
         private string FilePath { get; set; }
         private string NomDossier { get; set; }
+        private string Url;
         private string Login;
         private SecureString Mdp;
 
@@ -43,6 +44,7 @@ namespace recupMetaDonnees
         public InstanceBot(string url, string chemin, string log, string pwd)
         {
             ClientCtx = new ClientContext(url);
+            Url = url;
             FilePath = chemin;
             string[] split = ClientCtx.Url.Split('/');
             Domaine = split[0] + "//" + split[2];
@@ -60,7 +62,7 @@ namespace recupMetaDonnees
             ListDesField = new List<Field>();
 
             //GetAllSiteCollections();
-           
+            GetAllSubWebs();
 
         }
         private void GetAllSiteCollections()
@@ -87,7 +89,7 @@ namespace recupMetaDonnees
             }
         }
 
-        public void GetAllSubWebs(string siteCollection)
+        public void GetAllSubWebs()
         {
 
             using (ClientCtx)
@@ -117,12 +119,12 @@ namespace recupMetaDonnees
                     ListDesSites.Add(subWeb);
 
                     ClientCtx = new ClientContext(newpath);
-                    if (subWeb.Webs != null) GetAllSubWebs(siteCollection);
+                    if (subWeb.Webs != null) GetAllSubWebs();
 
                 }
-
-                ClientCtx = new ClientContext(Domaine + "/sites/" + siteCollection);
             }
+
+            ClientCtx = new ClientContext(Url);
         }
 
         public void GetSiteFolders(string nomSite)
