@@ -17,7 +17,7 @@ namespace recupMetaDonnees
          
            InstanceBot i = new InstanceBot(URL, titreFichier, "collab.ext@axiome-solution.fr", "partenR@xiome");
             i.GetAllSubWebs("iutbot");
-            i.GetSiteFolders("bot1");
+            i.GetSiteFolders("Bot 1");
             i.GetFolderContentTypes("Documents");
             i.GetChampsDunContentType("Document");
             /*InstanceBot.ConvertToString(i.ListDesSiteCollections).ForEach(Console.WriteLine);

@@ -127,36 +127,41 @@ namespace recupMetaDonnees
 
         public void GetSiteFolders(string nomSite)
         {
-            using (ClientCtx)
-            {
-                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
-                    /*
-                    foreach (string s in ListDesSiteCollections)
+            
+                /*
+                foreach (string s in ListDesSiteCollections)
+                {
+                    if (s.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        if (s.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            //Update the client context with the selected site
-                            ClientCtx = new ClientContext(Domaine + "/sites/" + s);
-                        }
+                        //Update the client context with the selected site
+                        ClientCtx = new ClientContext(Domaine + "/sites/" + s);
                     }
-                    */
+                }
+                */
+                foreach (Web s in ListDesSites)
+                {
+                    if (s.Title.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        //Update the client context with the selected site
+                        ClientCtx = new ClientContext(s.Url);
+                    }
+                }
 
-                    ListCollection listColl = ClientCtx.Web.Lists;
+                ListCollection listColl = ClientCtx.Web.Lists;
 
 
                 // Execute query. 
                 ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
                                                                     testList => testList.BaseTemplate));
-                //try
-                //{
+                try
+                {
                 ClientCtx.ExecuteQuery();
-                /*}
+                }
                 catch
                 {
-                    Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
-                    Task.Delay(4000);
-                    System.Environment.Exit(-2);
-                }*/
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                ClientCtx.ExecuteQuery();
+                 }
 
                 foreach (List list in listColl)
                 {
@@ -166,8 +171,8 @@ namespace recupMetaDonnees
                     }
 
                 }
-            }
-            ClientCtx = new ClientContext(ClientCtx.Url + "/" + nomSite);
+            
+
 
         }
 
