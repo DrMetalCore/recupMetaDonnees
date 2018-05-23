@@ -12,14 +12,16 @@ namespace recupMetaDonnees
            string URL = "https://axiomesolution.sharepoint.com/sites/iutbot";
             string nomListe = "Facture";
             string nomContentType = "Facture";
-            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest3.txt";
+            string titreFichier = "C:/Users/luka/source/repos/recupMetaDonnees/recupMetaDonnees/jeTest4.txt";
             string a = "partnR@xiome";
          
            InstanceBot i = new InstanceBot(URL, titreFichier, "collab.ext@axiome-solution.fr", "partenR@xiome");
-            
+            i.GetAllSubWebs("iutbot");
             i.GetSiteFolders("bot1");
             i.GetFolderContentTypes("Documents");
             i.GetChampsDunContentType("Document");
+            /*InstanceBot.ConvertToString(i.ListDesSiteCollections).ForEach(Console.WriteLine);
+            Console.WriteLine("/////////////////////////");*/
             InstanceBot.ConvertToString(i.ListDesSites).ForEach(Console.WriteLine);
             Console.WriteLine("/////////////////////////");
             InstanceBot.ConvertToString(i.ListDesDossier).ForEach(Console.WriteLine);
