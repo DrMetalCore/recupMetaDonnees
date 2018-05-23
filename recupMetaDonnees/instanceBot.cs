@@ -7,6 +7,8 @@ using System.Net;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Security;
+using Microsoft.Online.SharePoint.TenantAdministration;
+using AngleSharp.Network.Default;
 
 namespace recupMetaDonnees
 {
@@ -25,7 +27,7 @@ namespace recupMetaDonnees
         private ListItem Fichier { get; set; }
 
 
-        public Dictionary<string, string> ListDesSiteCollections { get; set; }
+        public List<string> ListDesSiteCollections { get; set; }
         public List<Web> ListDesSites { get; set; }
         public List<List> ListDesDossier { get; set; }
         public List<ContentType> ListDesContentType { get; set; }
@@ -51,82 +53,41 @@ namespace recupMetaDonnees
             Mdp = passWord;
 
 
-            ListDesSiteCollections = new Dictionary<string, string>();
+            ListDesSiteCollections = new List<string>();
             ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
             ListDesContentType = new List<ContentType>();
             ListDesField = new List<Field>();
 
-            //GetAllSiteCollections(url);
-            GetAllSubWebs();
+            //GetAllSiteCollections();
+           
 
         }
-        private void GetAllSiteCollections(string url)
+        private void GetAllSiteCollections()
         {
-
-            HttpWebRequest endpointRequest = (HttpWebRequest)HttpWebRequest.Create(url + "/_api/search/query?querytext='contentclass:sts_site'&trimduplicates=false&rowlimit=100");
-
-            endpointRequest.Method = "GET";
-            endpointRequest.Accept = "application/json;odata=verbose";
-            SharePointOnlineCredentials cred = new SharePointOnlineCredentials(Login, Mdp);
-            endpointRequest.Credentials = cred;
-            HttpWebResponse endpointResponse = (HttpWebResponse)endpointRequest.GetResponse();
-            try
+            using (ClientCtx = new ClientContext("https://axiomesolution-admin.sharepoint.com/"))
             {
-                WebResponse webResponse = endpointRequest.GetResponse();
-                Stream webStream = webResponse.GetResponseStream();
-                StreamReader responseReader = new StreamReader(webStream);
-                string response = responseReader.ReadToEnd();
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                SPOSitePropertiesEnumerable spp = null;
+                Tenant tenant = new Tenant(ClientCtx);
+                int startIndex = 0;
 
-                JObject jobj = JObject.Parse(response);
-
-                for (int ind = 0; ind < jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"].Count(); ind++)
+                while (spp == null || spp.Count > 0)
                 {
+                    spp = tenant.GetSiteProperties(startIndex, true);
+                    ClientCtx.Load(spp);
+                    ClientCtx.ExecuteQuery();
 
-                    string urlCollection = jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][6]["Value"].ToString();
-                    string nomCollection = jobj["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"][ind]["Cells"]["results"][3]["Value"].ToString();
-                    if (urlCollection.Contains("loca-fcn-sp16/sites/") == true)
+                    foreach (SiteProperties sp in spp)
                     {
-                        string[] split = urlCollection.Split('/');
-                        ClientCtx = new ClientContext(Domaine + "/sites/" + split[4]);
-                        using (ClientCtx = new ClientContext(ClientCtx.Url))
-                        {
-                            ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
-                            Web rootWeb = ClientCtx.Site.RootWeb;
-                            ClientCtx.Load(rootWeb);
-
-                            BasePermissions bp = new BasePermissions();
-                            bp.Set(PermissionKind.AddListItems);
-                            //
-                            ClientResult<bool> viewListItems = rootWeb.DoesUserHavePermissions(bp);
-                            try
-                            {
-                                ClientCtx.ExecuteQuery();
-                                if (viewListItems.Value)
-                                {
-                                    ListDesSiteCollections.Add(nomCollection, split[4]);
-                                }
-
-                            }
-                            catch
-                            {
-                                Console.WriteLine("\n ---> You don't have access to site {0}\n   -- Exception: ");
-                            }
-
-                        }
+                        ListDesSiteCollections.Add(sp.Title);
                     }
+                    startIndex++;
                 }
-
-                responseReader.Close();
-
-            }
-            catch (Exception e)
-            {
-                Console.Out.WriteLine(e.Message); Console.ReadLine();
             }
         }
 
-        private void GetAllSubWebs()
+        public void GetAllSubWebs(string siteCollection)
         {
 
             using (ClientCtx)
@@ -156,77 +117,87 @@ namespace recupMetaDonnees
                     ListDesSites.Add(subWeb);
 
                     ClientCtx = new ClientContext(newpath);
-                    if (subWeb.Webs != null) GetAllSubWebs();
+                    if (subWeb.Webs != null) GetAllSubWebs(siteCollection);
 
                 }
+
+                ClientCtx = new ClientContext(Domaine + "/sites/" + siteCollection);
             }
         }
 
         public void GetSiteFolders(string nomSite)
         {
-
-            foreach (KeyValuePair<string, string> s in ListDesSiteCollections)
+            using (ClientCtx)
             {
-                if (s.Key.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                    /*
+                    foreach (string s in ListDesSiteCollections)
+                    {
+                        if (s.Equals(nomSite, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            //Update the client context with the selected site
+                            ClientCtx = new ClientContext(Domaine + "/sites/" + s);
+                        }
+                    }
+                    */
+
+                    ListCollection listColl = ClientCtx.Web.Lists;
+
+
+                // Execute query. 
+                ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
+                                                                    testList => testList.BaseTemplate));
+                //try
+                //{
+                ClientCtx.ExecuteQuery();
+                /*}
+                catch
                 {
-                    //Update the client context with the selected site
-                    ClientCtx = new ClientContext(Domaine + "/sites/" + s.Value);
+                    Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
+                    Task.Delay(4000);
+                    System.Environment.Exit(-2);
+                }*/
+
+                foreach (List list in listColl)
+                {
+                    if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
+                    {
+                        ListDesDossier.Add(list);
+                    }
+
                 }
             }
-
-
-            ListCollection listColl = ClientCtx.Web.Lists;
-
-
-            // Execute query. 
-            ClientCtx.Load(listColl, lists => lists.Include(testList => testList.Title,
-                                                                testList => testList.BaseTemplate));
-            //try
-            //{
-            ClientCtx.ExecuteQuery();
-            /*}
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans la récupération des dossier veuillez verifier le nom du site");
-                Task.Delay(4000);
-                System.Environment.Exit(-2);
-            }*/
-
-            foreach (List list in listColl)
-            {
-                if (list.BaseTemplate == 101 && list.Title != "Site Assets") // id dossier
-                {
-                    ListDesDossier.Add(list);
-                }
-
-            }
+            ClientCtx = new ClientContext(ClientCtx.Url + "/" + nomSite);
 
         }
 
         public void GetFolderContentTypes(string nomListe)
         {
-
-            // Get the content type collection for the list nomListe
-
-            NomDossier = nomListe;
-            ContentTypeCollection contentTypeColl = ClientCtx.Web.Lists.GetByTitle(NomDossier).ContentTypes;
-            //Execute the reques
-            ClientCtx.Load(contentTypeColl);
-
-            //try
-            //{
-            ClientCtx.ExecuteQuery();
-            //}
-            //catch
-            //{
-            //  Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
-            //Console.Read();
-            //System.Environment.Exit(-3);
-            // }
-
-            foreach (ContentType c in contentTypeColl)
+            using (ClientCtx)
             {
-                ListDesContentType.Add(c);
+                ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
+                // Get the content type collection for the list nomListe
+
+                NomDossier = nomListe;
+                ContentTypeCollection contentTypeColl = ClientCtx.Web.Lists.GetByTitle(NomDossier).ContentTypes;
+                //Execute the reques
+                ClientCtx.Load(contentTypeColl);
+
+                //try
+                //{
+                ClientCtx.ExecuteQuery();
+                //}
+                //catch
+                //{
+                //  Console.WriteLine("Quelquechose s'est mal passé dans la récupération des content types veuillez verifier le nom du dossier");
+                //Console.Read();
+                //System.Environment.Exit(-3);
+                // }
+
+                foreach (ContentType c in contentTypeColl)
+                {
+                    ListDesContentType.Add(c);
+                }
             }
         }
 
@@ -332,7 +303,7 @@ namespace recupMetaDonnees
         {
 
             // Add the ListItem
-            using (ClientCtx = new ClientContext(ClientCtx.Url))
+            using (ClientCtx)
             {
                 ClientCtx.Credentials = new SharePointOnlineCredentials(Login, Mdp);
                 //if (NomDossier == "Documents") NomDossier = "Shared Documents";
