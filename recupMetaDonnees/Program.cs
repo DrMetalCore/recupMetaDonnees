@@ -30,6 +30,7 @@ namespace recupMetaDonnees
             Console.WriteLine("/////////////////////////");
             InstanceBot.ConvertToString(i.ListDesField).ForEach(Console.WriteLine);
             i.ToUploadFile();
+            i.SetCollValue("Titre", "blablabla");
             /*
             foreach (var f in i.ListDesField)
             {
