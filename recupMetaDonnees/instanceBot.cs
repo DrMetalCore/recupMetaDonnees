@@ -251,57 +251,50 @@ namespace recupMetaDonnees
 
         public void SetCollValue(string nomColl, object valeur)
         {
-
-            Field f = ListDesField.Find(field => field.Title == nomColl);
-            if (f == null) f = ListDesField.Find(field => field.InternalName == nomColl);
-            //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
-            if (f.TypeAsString == "Boolean")
+            using (ClientCtx)
             {
-                try
+
+                Field f = ListDesField.Find(field => field.Title == nomColl);
+                if (f == null) f = ListDesField.Find(field => field.InternalName == nomColl);
+                //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
+                if (f.TypeAsString == "Boolean")
                 {
-                    Fichier[nomColl] = Convert.ToBoolean(valeur);
+                    try
+                    {
+                        Fichier[f.InternalName] = Convert.ToBoolean(valeur);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("L'entré n'était pas un booleen");
+                    }
                 }
-                catch
+                else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency")
                 {
-                    Console.WriteLine("L'entré n'était pas un booleen");
+                    try
+                    {
+                        Fichier[f.InternalName] = Convert.ToInt32(valeur);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("L'entré n'était pas un nombre");
+                    }
+
                 }
-            }
-            else if (f.TypeAsString == "Number" || f.TypeAsString == "Currency")
-            {
-                try
+                else if (f.TypeAsString == "Text")
                 {
-                    Fichier[nomColl] = Convert.ToInt32(valeur);
-                }
-                catch
-                {
-                    Console.WriteLine("L'entré n'était pas un nombre");
+                    try
+                    {
+                        Fichier[f.InternalName] = valeur.ToString();
+                    }
+                    catch
+                    {
+                        Console.WriteLine("L'entré n'était pas une chaine de caractère");
+                    }
                 }
 
-            }
-            else if (f.TypeAsString == "Text")
-            {
-                try
-                {
-                    Fichier[nomColl] = valeur.ToString();
-                }
-                catch
-                {
-                    Console.WriteLine("L'entré n'était pas une chaine de caractère");
-                }
-            }
 
-
-            Fichier.Update(); // important, rembeber changes
-
-            try
-            {
+                Fichier.Update(); // important, rembeber changes
                 ClientCtx.ExecuteQuery();
-            }
-            catch
-            {
-                Console.WriteLine("Quelquechose s'est mal passé dans la mofication de la valeur d'un champs veuillez verifier le le champs et la valeur");
-                Console.Read();
-                System.Environment.Exit(-5);
             }
 
         }
