@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security;
+﻿using Microsoft.SharePoint.Client;
+using System;
+
 
 namespace recupMetaDonnees
 {
@@ -17,9 +17,9 @@ namespace recupMetaDonnees
          
            InstanceBot i = new InstanceBot(URL, titreFichier, "collab.ext@axiome-solution.fr", "partenR@xiome");
            
-            i.GetSiteFolders("Bot 1");
+            i.GetSiteFolders("Enseignants");
             i.GetFolderContentTypes("Documents");
-            i.GetChampsDunContentType("Document");
+            i.GetChampsDunContentType("Sujet de TP");
             /*InstanceBot.ConvertToString(i.ListDesSiteCollections).ForEach(Console.WriteLine);
             Console.WriteLine("/////////////////////////");*/
             InstanceBot.ConvertToString(i.ListDesSites).ForEach(Console.WriteLine);
@@ -29,8 +29,19 @@ namespace recupMetaDonnees
             InstanceBot.ConvertToString(i.ListDesContentType).ForEach(Console.WriteLine);
             Console.WriteLine("/////////////////////////");
             InstanceBot.ConvertToString(i.ListDesField).ForEach(Console.WriteLine);
-            i.ToUploadFile();
-            i.SetCollValue("Titre", "blablabla");
+            foreach (var f in i.ListDesField)
+            {
+                //Console.WriteLine(f.FieldTypeKind.ToString());
+                if (f.FieldTypeKind == Microsoft.SharePoint.Client.FieldType.Choice)
+                {
+                    FieldChoice c = i.ClientCtx.CastTo<FieldChoice>(f);
+                    foreach (var choix in c.Choices)
+                    {
+                        Console.WriteLine(choix);
+                    }
+                }
+
+            }
             /*
             foreach (var f in i.ListDesField)
             {
