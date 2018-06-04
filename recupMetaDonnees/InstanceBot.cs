@@ -303,7 +303,7 @@ namespace recupMetaDonnees
                     }
 
                 }
-                else if (f.TypeAsString == "Text")
+                else if (f.TypeAsString == "Text" || f.FieldTypeKind == Microsoft.SharePoint.Client.FieldType.Choice)
                 {
                     try
                     {
