@@ -24,7 +24,7 @@ namespace recupMetaDonnees
 
 
         private ContentType TypeDuFichier { get; set; }
-        private ClientContext ClientCtx { get; set; }
+        public ClientContext ClientCtx { get; set; }
         private ListItem Fichier { get; set; }
 
 
@@ -32,7 +32,7 @@ namespace recupMetaDonnees
         public List<Web> ListDesSites { get; set; }
         public List<List> ListDesDossier { get; set; }
         public List<ContentType> ListDesContentType { get; set; }
-        public List<Field> ListDesField { get; set; }
+        public Dictionary<Field, object> ListDesField { get; set; }
 
         /* Peux être inutile
         public List<string> ListDesSitesString { get; set; }
@@ -59,7 +59,7 @@ namespace recupMetaDonnees
             ListDesSites = new List<Web>();
             ListDesDossier = new List<List>();
             ListDesContentType = new List<ContentType>();
-            ListDesField = new List<Field>();
+            ListDesField = new Dictionary<Field, object>();
 
             //GetAllSiteCollections();
             GetAllSubWebs();
@@ -237,8 +237,25 @@ namespace recupMetaDonnees
                     {
                         if (true)
                         {
-                            if (f.FromBaseType == false) ListDesField.Add(f);
-                            if (f.InternalName == "ContentType") ListDesField.Add(f);
+                            if (f.FromBaseType == false && f.InternalName == "ContentType")
+                            {
+                                List<string> choix = new List<string>();
+                                if (f.TypeAsString=="Boolean")
+                                {
+                                    ListDesField.Add(f, true);
+                                }
+                                if (f.FieldTypeKind == Microsoft.SharePoint.Client.FieldType.Choice)
+                                {
+                                    FieldChoice c = ClientCtx.CastTo<FieldChoice>(f);
+                                    foreach (var ch in c.Choices)
+                                    {
+                                        choix.Add(ch);
+                                    }
+                                    ListDesField.Add(f, choix);
+                                }
+                                else ListDesField.Add(f, null);
+                            }
+                            
                         }
                     }
                 }
@@ -253,9 +270,15 @@ namespace recupMetaDonnees
         {
             using (ClientCtx)
             {
-
-                Field f = ListDesField.Find(field => field.Title == nomColl);
-                if (f == null) f = ListDesField.Find(field => field.InternalName == nomColl);
+                Field f = null;
+                foreach (var pair in ListDesField)
+                {
+                    if (pair.Key.Title==nomColl || pair.Key.InternalName==nomColl)
+                    {
+                        f = pair.Key;
+                    }
+                }
+                
                 //if (f == null) Console.WriteLine("Veuiller verifier le nom du champ");
                 if (f.TypeAsString == "Boolean")
                 {
@@ -280,7 +303,7 @@ namespace recupMetaDonnees
                     }
 
                 }
-                else if (f.TypeAsString == "Text")
+                else if (f.TypeAsString == "Text" || f.FieldTypeKind == Microsoft.SharePoint.Client.FieldType.Choice)
                 {
                     try
                     {
